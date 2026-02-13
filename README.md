@@ -1,6 +1,6 @@
 # Wayne Nolette - Portfolio
 
-Static portfolio site built with Astro v5. [Live site](https://wayne-nolette1.github.io/wayne-nolette/)
+Static portfolio site built with Astro v5. [Live site](https://waynenolette1.github.io/wayne-nolette/)
 
 ## What This Is
 
