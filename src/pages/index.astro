@@ -1,0 +1,1010 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ContactCTA from '../components/ContactCTA.astro';
+import { SITE_CONFIG } from '../config/constants';
+import { getCollection } from 'astro:content';
+import { calculateReadingTime } from '../utils/reading-time';
+
+const COMPANIES = ['ZoomInfo', 'BAE Systems'] as const;
+
+// Key projects - most impressive work
+const keyProjects = [
+  {
+    title: 'IE Hub Platform',
+    metric: 'Ops Intelligence',
+    description:
+      'Unified operational intelligence platform for Infrastructure Engineering — consolidating DataDog, PagerDuty, Jira, Slack, Zoom, and Backstage into a single team-scoped system for service health, compliance, cost analysis, and AI-powered investigation.',
+    tech: ['React 19', 'GCP', 'BigQuery'],
+    link: `${import.meta.env.BASE_URL}case-studies/ie-hub-platform/`,
+  },
+  {
+    title: 'AI Investigation Agent',
+    metric: '36 AI Tools',
+    description:
+      'Production-grade AI agent integrated via the internal Agentic Platform — Claude 4.5 Sonnet for reasoning, GPT-4o-mini for suggestions, 36 governed tools, 21 BigQuery tables, with structured tool invocation, guardrails, and execution logging.',
+    tech: ['Claude AI', 'Agentic Platform', 'Python'],
+    link: `${import.meta.env.BASE_URL}case-studies/ci-analysis-agent/`,
+  },
+  {
+    title: 'GCP Infrastructure',
+    metric: '16+ Services',
+    description:
+      'Terraform-managed GCP infrastructure for 16+ Cloud Run services with unified service accounts, Cloud Scheduler automation, and BigQuery datasets across 7 governance domains. Jenkins → Artifact Registry → Cloud Run pipeline across dev/stg/prd.',
+    tech: ['Terraform', 'Cloud Run', 'BigQuery'],
+    link: `${import.meta.env.BASE_URL}case-studies/gcp-infrastructure/`,
+  },
+  {
+    title: 'OpsieBot',
+    metric: 'AI Automation',
+    description:
+      'Slack bot automating PagerDuty team governance using Claude AI for natural language parsing. Generates GitHub PRs with atomic Terraform changes across team resources, schedules, and escalation policies with duplicate validation.',
+    tech: ['Claude AI', 'Slack', 'Terraform'],
+    link: `${import.meta.env.BASE_URL}case-studies/opsiebot/`,
+  },
+];
+
+// Latest writing articles for discovery
+const allPosts = await getCollection('writing', ({ data }) => !data.draft);
+const latestPosts = allPosts
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 4);
+---
+
+<BaseLayout
+  title="Tech Manager | AI Systems & Cloud Automation"
+  description="Tech Manager building scalable systems, automating workflows, and improving engineering visibility. GCP, BigQuery, DevOps, and data-powered decisioning."
+>
+  <!-- Hero Section - Lead with Impact -->
+  <section class="hero">
+    <div class="availability-banner">
+      <span class="pulse-dot"></span>
+      Open to new opportunities
+    </div>
+    <p class="role-badge">Tech Manager | AI Systems & Cloud Automation</p>
+    <h1 class="hero-title">
+      AI Systems · Cloud Automation · Data-Powered Decisioning
+    </h1>
+    <p class="hero-subtitle">
+      I build <strong>operational intelligence platforms</strong>, automate
+      workflows, and improve engineering visibility through software.
+      Architecting IE Hub — bridging <strong>data infrastructure</strong>,
+      <strong>AI-powered investigation</strong>, and <strong
+        >team performance</strong
+      > — driving operational clarity across Infrastructure Engineering.
+    </p>
+
+    <!-- Social Proof - Companies -->
+    <div class="company-row">
+      <span class="company-label">Experience</span>
+      <div class="company-badges">
+        {
+          COMPANIES.map((company) => (
+            <span class="company-name">{company}</span>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="hero-cta">
+      <a href={`mailto:${SITE_CONFIG.email}`} class="cta-primary">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path
+            d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+          ></path>
+          <polyline points="22,6 12,13 2,6"></polyline>
+        </svg>
+        Email Me
+      </a>
+      <a
+        href={`${import.meta.env.BASE_URL}case-studies/`}
+        class="cta-secondary"
+      >
+        View Work
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="M5 12h14M12 5l7 7-7 7"></path>
+        </svg>
+      </a>
+      <a
+        href={SITE_CONFIG.linkedin}
+        class="cta-linkedin"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="LinkedIn Profile"
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"
+          ></path>
+        </svg>
+        LinkedIn
+      </a>
+    </div>
+  </section>
+
+  <!-- Key Projects - At-a-glance impact -->
+  <section class="section key-projects">
+    <div class="section-header">
+      <h2 class="gradient-header">Key Projects</h2>
+      <a href={`${import.meta.env.BASE_URL}case-studies/`} class="view-all">
+        All case studies
+      </a>
+    </div>
+    <div class="key-projects-grid">
+      {
+        keyProjects.map((project) => (
+          <a href={project.link} class="key-project-card">
+            <div class="project-metric">{project.metric}</div>
+            <h3>{project.title}</h3>
+            <p>{project.description}</p>
+            <div class="project-tech">
+              {project.tech.map((t) => (
+                <span>{t}</span>
+              ))}
+            </div>
+          </a>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- Latest Articles -->
+  <section class="section latest-section">
+    <div class="section-header">
+      <h2 class="gradient-header">Latest Deep-Dives</h2>
+      <a href={`${import.meta.env.BASE_URL}writing/`} class="view-all">
+        All articles
+      </a>
+    </div>
+    <div class="latest-grid">
+      {
+        latestPosts.map((post) => (
+          <a
+            href={`${import.meta.env.BASE_URL}writing/${post.id}/`}
+            class="latest-card"
+          >
+            <div class="latest-meta">
+              <span class="latest-date">
+                {post.data.pubDate.toLocaleDateString('en-US', {
+                  month: 'short',
+                  year: 'numeric',
+                })}
+              </span>
+              <span class="latest-reading-time">
+                {calculateReadingTime(post.body || '')} min read
+              </span>
+            </div>
+            <h3>{post.data.title}</h3>
+            <p>{post.data.description}</p>
+            {post.data.tags && post.data.tags.length > 0 && (
+              <div class="latest-tags">
+                {post.data.tags.slice(0, 3).map((tag: string) => (
+                  <span class="latest-tag">{tag}</span>
+                ))}
+              </div>
+            )}
+          </a>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- Contact CTA -->
+  <ContactCTA
+    heading="Let's talk"
+    text="I build scalable systems and automate workflows that drive operational clarity. Let's connect."
+  />
+</BaseLayout>
+
+<style>
+  /* Hero Section */
+  .hero {
+    position: relative;
+    padding-top: var(--spacing-xl);
+    margin-bottom: var(--spacing-xl);
+    padding-bottom: var(--spacing-xl);
+    border-bottom: 1px solid var(--color-border);
+    overflow: hidden;
+  }
+
+  .availability-banner {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    background: var(--color-success-10);
+    border: 1px solid var(--color-success-30);
+    color: var(--color-success);
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    letter-spacing: var(--letter-spacing-subtle);
+    margin-bottom: var(--spacing-md);
+    animation: fadeInDown var(--animation-fade-in-slow) ease-out;
+    will-change: transform, opacity;
+  }
+
+  .pulse-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--color-success);
+    border-radius: var(--radius-full);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: var(--opacity-half);
+      transform: scale(1.2);
+    }
+  }
+
+  .role-badge {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-widest);
+    margin-bottom: var(--spacing-sm);
+    animation: fadeInUp var(--animation-fade-in-slow) ease-out var(--delay-05)
+      both;
+    background: linear-gradient(
+      135deg,
+      var(--color-accent) 0%,
+      var(--color-gradient-purple) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  @keyframes fadeInDown {
+    from {
+      opacity: 0;
+      transform: translateY(calc(-1 * var(--translate-sm)));
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 6vw, var(--font-size-9xl));
+    font-weight: var(--font-weight-normal);
+    letter-spacing: -0.02em;
+    margin-top: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+    line-height: var(--line-height-tighter);
+    max-width: 700px;
+    -webkit-text-wrap: balance;
+    text-wrap: balance;
+    animation: fadeInUp var(--animation-fade-in-slow) ease-out var(--delay-1)
+      both;
+    will-change: transform, opacity;
+    position: relative;
+    z-index: 1;
+    background: linear-gradient(
+      135deg,
+      var(--color-text) 0%,
+      var(--color-text-muted) 50%,
+      var(--color-accent) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .gradient-header {
+    font-family: var(--font-display);
+    font-size: var(--font-size-7xl);
+    font-weight: var(--font-weight-normal);
+    letter-spacing: -0.01em;
+    color: var(--color-text);
+  }
+
+  .hero-subtitle {
+    font-size: var(--font-size-2xl);
+    color: var(--color-text-muted);
+    margin-bottom: var(--spacing-lg);
+    margin-left: 0;
+    margin-right: 0;
+    max-width: 56ch;
+    line-height: var(--line-height-prose);
+    letter-spacing: var(--letter-spacing-snug);
+    animation: fadeInUp var(--animation-fade-in-slow) ease-out var(--delay-2)
+      both;
+    will-change: transform, opacity;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-subtitle strong {
+    color: var(--color-link-hover);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  /* Company row / social proof */
+  .company-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-xl);
+    animation: fadeInUp var(--animation-fade-in-slow) ease-out var(--delay-3)
+      both;
+    will-change: transform, opacity;
+    position: relative;
+    z-index: 1;
+  }
+
+  .company-label {
+    font-size: var(--font-size-2xs);
+    font-weight: var(--font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-widest);
+    color: var(--color-accent);
+  }
+
+  .company-badges {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+  }
+
+  .company-name {
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text);
+    letter-spacing: var(--letter-spacing-tight);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    min-height: var(--touch-target);
+    display: inline-flex;
+    align-items: center;
+    background: linear-gradient(
+      135deg,
+      var(--color-accent-08) 0%,
+      var(--color-gradient-purple-06) 100%
+    );
+    border: 1px solid var(--color-accent-20);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-snap);
+    position: relative;
+
+    /* Enhanced shadow for depth */
+    box-shadow: 0 1px 3px var(--color-overlay-black-10);
+  }
+
+  /* Removed problematic blur glow effect - using box-shadow instead */
+
+  @media (hover: hover) {
+    .company-name:hover {
+      border-color: var(--color-accent-35);
+      color: var(--color-text);
+      transform: scale(1.05);
+      background: linear-gradient(
+        135deg,
+        var(--color-accent-15) 0%,
+        var(--color-gradient-purple-10) 100%
+      );
+      box-shadow: 0 4px 12px var(--color-accent-15);
+    }
+  }
+
+  .hero-cta {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-xl);
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Staggered button entrance animations */
+  .hero-cta .cta-primary {
+    opacity: 0;
+    animation: buttonSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) var(--delay-4)
+      forwards;
+  }
+
+  .hero-cta .cta-secondary {
+    opacity: 0;
+    animation: buttonSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1)
+      calc(var(--delay-4) + 0.1s) forwards;
+  }
+
+  @keyframes buttonSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(var(--translate-3sm)) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @media (max-width: 400px) {
+    .hero-cta {
+      flex-direction: column;
+      width: 100%;
+      gap: var(--spacing-sm);
+    }
+
+    .hero-cta .cta-primary,
+    .hero-cta .cta-secondary,
+    .hero-cta .cta-linkedin {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  /* CTA Primary Button - Accent filled button for high visibility */
+  .cta-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    min-height: var(--touch-target);
+    background: linear-gradient(
+      135deg,
+      var(--color-accent) 0%,
+      var(--color-link) 100%
+    );
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-full);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-md);
+    letter-spacing: var(--letter-spacing-subtle);
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 14px var(--color-accent-30);
+    transition: all var(--transition-base);
+  }
+
+  .cta-primary svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    opacity: 0.9;
+  }
+
+  @media (hover: hover) {
+    .cta-primary:hover {
+      background: var(--color-link);
+      background: linear-gradient(
+        135deg,
+        var(--color-link) 0%,
+        var(--color-link-hover) 100%
+      );
+      box-shadow: 0 8px 24px var(--color-accent-40);
+      transform: translateY(var(--lift-subtle));
+      text-decoration: none;
+      color: #fff;
+    }
+
+    .cta-primary:hover svg {
+      opacity: 1;
+    }
+  }
+
+  .cta-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px var(--color-accent-30);
+  }
+
+  .cta-primary:focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* CTA Secondary Button - Ghost style with border for hierarchy */
+  .cta-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    min-height: var(--touch-target);
+    background: transparent;
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-md);
+    letter-spacing: var(--letter-spacing-subtle);
+    text-decoration: none;
+    position: relative;
+    transition: all var(--transition-base);
+  }
+
+  .cta-secondary svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    opacity: var(--opacity-high);
+    transition:
+      transform 0.2s ease,
+      opacity 0.2s ease;
+  }
+
+  @media (hover: hover) {
+    .cta-secondary:hover {
+      background: var(--color-bg-subtle);
+      border-color: var(--color-accent-30);
+      color: var(--color-text);
+      text-decoration: none;
+      transform: translateY(var(--lift-subtle));
+    }
+
+    .cta-secondary:hover svg {
+      transform: translateX(var(--translate-2xs));
+      opacity: 1;
+    }
+  }
+
+  .cta-secondary:active {
+    background: var(--color-bg-elevated);
+    transform: scale(var(--scale-press));
+  }
+
+  .cta-secondary:focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: 2px;
+    background: var(--color-bg-subtle);
+  }
+
+  /* Disable global pseudo-element glow effects - this button uses different styling */
+  .cta-secondary::before,
+  .cta-secondary::after {
+    display: none;
+  }
+
+  /* LinkedIn CTA - subtle tertiary style */
+  .cta-linkedin {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    min-height: var(--touch-target);
+    background: transparent;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-full);
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-md);
+    letter-spacing: var(--letter-spacing-subtle);
+    text-decoration: none;
+    transition: all var(--transition-base);
+  }
+
+  .cta-linkedin svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    opacity: var(--opacity-soft);
+    transition: opacity 0.2s ease;
+  }
+
+  @media (hover: hover) {
+    .cta-linkedin:hover {
+      background: var(--color-bg-subtle);
+      border-color: var(--color-accent-30);
+      color: var(--color-text);
+      text-decoration: none;
+      transform: translateY(var(--lift-subtle));
+    }
+
+    .cta-linkedin:hover svg {
+      opacity: 1;
+    }
+  }
+
+  .cta-linkedin:focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .cta-linkedin::before,
+  .cta-linkedin::after {
+    display: none;
+  }
+
+  .hero-cta .cta-linkedin {
+    opacity: 0;
+    animation: buttonSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1)
+      calc(var(--delay-4) + 0.2s) forwards;
+  }
+
+  @media (max-width: 640px) {
+    .hero-title {
+      font-size: var(--font-size-6xl);
+      line-height: var(--line-height-tight);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .hero-subtitle {
+      font-size: var(--font-size-md);
+      margin-bottom: var(--spacing-md);
+      line-height: var(--line-height-normal);
+    }
+
+    .company-row {
+      margin-bottom: var(--spacing-md);
+    }
+
+    .company-badges {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--spacing-xs);
+      width: 100%;
+    }
+
+    .company-name {
+      font-size: var(--font-size-2xs);
+      padding: var(--spacing-xs) var(--spacing-sm);
+      justify-content: center;
+      text-align: center;
+    }
+  }
+
+  /* Extra small screens (iPhone SE 375px, older devices) */
+  @media (max-width: 400px) {
+    .hero-title {
+      font-size: var(--font-size-5xl);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pulse-dot,
+    .cta-primary,
+    .gradient-header {
+      animation: none;
+    }
+  }
+
+  /* Key Projects */
+  .key-projects {
+    margin-bottom: var(--spacing-2xl);
+  }
+
+  .key-projects-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+  }
+
+  @media (max-width: 640px) {
+    .key-projects-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .key-project-card {
+    display: block;
+    position: relative;
+    background: var(--card-bg);
+    backdrop-filter: blur(var(--card-backdrop-blur));
+    -webkit-backdrop-filter: blur(var(--card-backdrop-blur));
+    border: var(--card-border);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  }
+
+  .key-project-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      var(--color-accent),
+      var(--color-gradient-purple),
+      transparent
+    );
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  @media (hover: hover) {
+    .key-project-card:hover {
+      border-color: rgba(255, 255, 255, 0.1);
+      box-shadow: var(--card-shadow-hover), var(--card-glow-accent);
+      transform: translateY(var(--lift-md));
+      text-decoration: none;
+    }
+
+    .key-project-card:hover h3 {
+      color: var(--color-link);
+    }
+  }
+
+  .key-project-card:focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .project-metric {
+    font-size: var(--font-size-stat);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-accent);
+    margin-bottom: var(--spacing-sm);
+    letter-spacing: var(--letter-spacing-tight);
+  }
+
+  .key-project-card h3 {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text);
+    margin: 0 0 var(--spacing-xs) 0;
+    transition: color var(--transition-fast);
+  }
+
+  .key-project-card p {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    line-height: var(--line-height-loose);
+    margin: 0 0 var(--spacing-md) 0;
+    letter-spacing: var(--letter-spacing-slight);
+  }
+
+  .project-tech {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    position: relative;
+    z-index: 1;
+  }
+
+  .project-tech span {
+    font-size: var(--font-size-2xs);
+    letter-spacing: var(--letter-spacing-subtle);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: var(--color-overlay-black-30);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    color: var(--color-text-muted);
+    font-weight: var(--font-weight-medium);
+    transition: all var(--transition-fast);
+  }
+
+  /* Sections */
+  .section {
+    margin-bottom: var(--spacing-2xl);
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--color-border-subtle);
+  }
+
+  .section-header h2 {
+    margin: 0;
+    border: none;
+    padding: 0;
+    position: relative;
+    padding-bottom: var(--spacing-sm);
+  }
+
+  .section-header h2::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 2px;
+    margin-top: var(--spacing-sm);
+    background: linear-gradient(
+      90deg,
+      var(--color-accent),
+      var(--color-gradient-purple),
+      transparent
+    );
+    border-radius: var(--radius-full);
+  }
+
+  .view-all {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+    min-height: var(--touch-target);
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .view-all::after {
+    content: ' →';
+  }
+
+  @media (hover: hover) {
+    .view-all:hover {
+      color: var(--color-link);
+    }
+  }
+
+  .view-all:focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* Animations */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(var(--translate-md));
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .latest-section {
+    margin-bottom: var(--spacing-2xl);
+  }
+
+  .latest-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-lg);
+    align-items: start;
+  }
+
+  .latest-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-lg);
+    background: var(--card-bg);
+    backdrop-filter: blur(var(--card-backdrop-blur));
+    -webkit-backdrop-filter: blur(var(--card-backdrop-blur));
+    border: var(--card-border);
+    border-left: 3px solid var(--color-accent-25);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  }
+
+  @media (hover: hover) {
+    .latest-card:hover {
+      border-color: rgba(255, 255, 255, 0.1);
+      border-left-color: var(--color-accent);
+      box-shadow: var(--card-shadow-hover), var(--card-glow-accent);
+      transform: translateY(var(--lift-md));
+    }
+
+    .latest-card:hover h3 {
+      color: var(--color-link);
+    }
+  }
+
+  .latest-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+  }
+
+  .latest-card .latest-date {
+    font-size: var(--font-size-2xs);
+    color: var(--color-text-subtle);
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-wider);
+  }
+
+  .latest-reading-time {
+    font-size: var(--font-size-2xs);
+    color: var(--color-text-subtle);
+    letter-spacing: var(--letter-spacing-subtle);
+  }
+
+  .latest-meta .latest-date::after {
+    content: '\00b7';
+    margin-left: var(--spacing-sm);
+    color: var(--color-border);
+  }
+
+  .latest-card h3 {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text);
+    line-height: var(--line-height-snug);
+    margin: 0;
+    transition: color var(--transition-fast);
+  }
+
+  .latest-card p {
+    margin: 0;
+    font-size: var(--font-size-base);
+    color: var(--color-text-muted);
+    line-height: var(--line-height-relaxed);
+    letter-spacing: var(--letter-spacing-slight);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .latest-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+  }
+
+  .latest-tag {
+    font-size: var(--font-size-2xs);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-subtle);
+    padding: var(--spacing-2xs) var(--spacing-sm);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-full);
+    letter-spacing: var(--letter-spacing-subtle);
+    transition: all var(--transition-fast);
+  }
+
+  @media (hover: hover) {
+    .latest-card:hover .latest-tag {
+      border-color: var(--color-accent-30);
+      color: var(--color-accent);
+    }
+  }
+
+  @media (min-width: 641px) {
+    .latest-grid > :last-child:nth-child(odd) {
+      grid-column: 1 / -1;
+      max-width: calc(50% - var(--spacing-lg) / 2);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .latest-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .latest-card {
+      padding: var(--spacing-sm) var(--spacing-md);
+    }
+  }
+</style>

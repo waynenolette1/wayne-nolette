@@ -1,0 +1,455 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ContactCTA from '../../components/ContactCTA.astro';
+import { getCollection } from 'astro:content';
+import { ADR_STATUS_COLORS } from '../../config/constants';
+import { sortByDateDesc } from '../../utils/collections';
+
+const allADRs = await getCollection('adrs');
+const sortedADRs = sortByDateDesc(allADRs);
+
+// Status badge configuration with icons and colors
+const STATUS_CONFIG = {
+  accepted: {
+    icon: '&#10003;',
+    label: 'Accepted',
+    colorVar: '--color-success',
+  },
+  proposed: { icon: '&#9679;', label: 'Proposed', colorVar: '--color-warning' },
+  deprecated: {
+    icon: '&#10005;',
+    label: 'Deprecated',
+    colorVar: '--color-text-muted',
+  },
+  superseded: {
+    icon: '&#8594;',
+    label: 'Superseded',
+    colorVar: '--color-text-muted',
+  },
+} as const;
+---
+
+<BaseLayout
+  title="Architecture Decision Records"
+  description="Documented architectural decisions with context, options considered, and trade-offs accepted."
+>
+  <div class="page-header">
+    <h1 class="page-title">Architecture Decision Records</h1>
+    <p class="page-subtitle">
+      ADRs capture significant architectural decisions with their context,
+      options considered, and consequences. They serve as a decision log for
+      understanding <em>why</em> systems are built the way they are.
+    </p>
+  </div>
+
+  <div class="adr-grid">
+    {
+      sortedADRs.map((adr, index) => {
+        const statusKey = adr.data.status as keyof typeof STATUS_CONFIG;
+        const statusConfig = STATUS_CONFIG[statusKey] || STATUS_CONFIG.proposed;
+        const statusColor =
+          ADR_STATUS_COLORS[statusKey] ?? 'var(--color-text-muted)';
+        const adrNumber =
+          adr.id.match(/^(\d+)/)?.[1] || String(index + 1).padStart(3, '0');
+
+        return (
+          <article
+            class="adr-card"
+            style={`--card-index: ${index}; --status-color: ${statusColor}`}
+          >
+            <a
+              href={`${import.meta.env.BASE_URL}adrs/${adr.id}/`}
+              class="card-link"
+            >
+              <div class="card-header">
+                <div class="card-header-left">
+                  <span class="adr-number">ADR-{adrNumber}</span>
+                  <span class="adr-status" data-status={adr.data.status}>
+                    <span class="status-icon" set:html={statusConfig.icon} />
+                    {statusConfig.label}
+                  </span>
+                </div>
+                <time
+                  class="adr-date"
+                  datetime={adr.data.pubDate.toISOString()}
+                >
+                  {adr.data.pubDate.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                  })}
+                </time>
+              </div>
+
+              <h2 class="adr-title">{adr.data.title}</h2>
+              <p class="adr-description">{adr.data.description}</p>
+
+              <span class="read-more">
+                Read decision
+                <svg
+                  class="arrow-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              </span>
+            </a>
+          </article>
+        );
+      })
+    }
+  </div>
+
+  <ContactCTA
+    heading="Questions about these decisions?"
+    text="Every decision has trade-offs. I can explain the reasoning."
+  />
+</BaseLayout>
+
+<style>
+  .page-header {
+    position: relative;
+    text-align: center;
+    margin-bottom: var(--spacing-2xl);
+    padding-bottom: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+    border-bottom: 1px solid var(--color-border-subtle);
+  }
+
+  .page-title {
+    font-size: var(--font-size-9xl);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--letter-spacing-tighter);
+    margin-bottom: var(--spacing-md);
+    background: linear-gradient(
+      135deg,
+      var(--color-text) 0%,
+      var(--color-text-muted) 50%,
+      var(--color-accent) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .page-subtitle {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-3xl);
+    line-height: var(--line-height-prose);
+    letter-spacing: var(--letter-spacing-snug);
+    max-width: 60ch;
+    margin: 0 auto;
+  }
+
+  .page-subtitle em {
+    font-style: italic;
+    color: var(--color-link);
+  }
+
+  .adr-grid {
+    display: grid;
+    gap: var(--spacing-lg);
+  }
+
+  @media (min-width: 900px) {
+    .adr-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .adr-card {
+    position: relative;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-accent);
+    border-radius: var(--radius-xl);
+    overflow: visible;
+    transition:
+      border-color var(--transition-snap),
+      box-shadow var(--transition-snap),
+      transform var(--transition-snap);
+
+    /* Remove Safari default focus outline */
+    outline: none;
+  }
+
+  /* Removed colored top border - was competing with status badge */
+
+  /* Subtle card glow on hover - neutral, not status-colored */
+  .adr-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-xl);
+    background: radial-gradient(
+      ellipse at center,
+      var(--color-accent-10) 0%,
+      transparent 70%
+    );
+    opacity: 0;
+    z-index: -1;
+    transition: opacity var(--transition-slow) cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+
+  /* Only apply hover effects on devices that support hover */
+  @media (hover: hover) {
+    .adr-card:hover {
+      border-color: var(--color-border-hover);
+      box-shadow: var(--shadow-md);
+      transform: translateY(var(--lift-sm));
+    }
+
+    .adr-card:hover::after {
+      opacity: var(--opacity-subtle);
+    }
+  }
+
+  /* Clean focus state without Safari outline */
+  .adr-card:focus-within {
+    border-color: transparent;
+    box-shadow:
+      inset 0 0 0 2px var(--color-accent-40),
+      0 0 0 3px var(--color-bg),
+      0 0 0 5px var(--color-accent-30);
+    outline: none;
+  }
+
+  .card-link {
+    display: block;
+    padding: var(--spacing-lg);
+    text-decoration: none;
+    color: inherit;
+    /* Remove Safari default focus outline */
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .card-link:focus-visible {
+    outline: none;
+  }
+
+  /* Mobile tap state */
+  .adr-card:active {
+    transform: scale(var(--scale-press));
+  }
+
+  .card-link:hover {
+    text-decoration: none;
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+  }
+
+  .card-header-left {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+  }
+
+  .adr-number {
+    font-size: var(--font-size-2xs);
+    font-weight: var(--font-weight-bold);
+    font-family: var(--font-mono);
+    letter-spacing: var(--letter-spacing-wide);
+    color: var(--color-accent);
+    opacity: 0.7;
+  }
+
+  /* Status badge - quiet metadata pill, not a headline */
+  .adr-status {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--em-xs);
+    font-size: var(--font-size-2xs);
+    font-weight: var(--font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-wide);
+    padding: var(--em-xs) var(--em-lg);
+    border-radius: var(--radius-sm);
+    /* Muted, low-contrast appearance */
+    background: var(--color-bg-subtle);
+    color: var(--color-text-subtle);
+    border: 1px solid var(--color-border-subtle);
+    transition: all var(--transition-fast);
+  }
+
+  .status-icon {
+    font-size: var(--font-size-2xs);
+    line-height: var(--line-height-none);
+    opacity: var(--opacity-soft);
+  }
+
+  /* Status colors - unified with search dialog badges */
+  .adr-status[data-status='accepted'] {
+    color: var(--color-success-80);
+    background: var(--color-success-08);
+    border-color: var(--color-success-20);
+  }
+
+  .adr-status[data-status='proposed'] {
+    color: var(--color-warning-80);
+    background: var(--color-warning-08);
+    border-color: var(--color-warning-20);
+  }
+
+  .adr-status[data-status='deprecated'],
+  .adr-status[data-status='superseded'] {
+    color: var(--color-text-subtle);
+    background: var(--color-bg-subtle);
+    border-color: var(--color-border-subtle);
+  }
+
+  /* No glow effects on status badges - they should whisper, not shout */
+
+  .adr-date {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-subtle);
+    font-weight: var(--font-weight-medium);
+    letter-spacing: var(--letter-spacing-subtle);
+  }
+
+  /* Title is the clear focal point - highest contrast */
+  .adr-title {
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--line-height-snug);
+    margin: 0 0 var(--spacing-sm);
+    color: var(--color-text);
+    transition: color var(--transition-fast);
+  }
+
+  @media (hover: hover) {
+    .adr-card:hover .adr-title {
+      color: var(--color-link);
+    }
+  }
+
+  .adr-card:focus-within .adr-title {
+    color: var(--color-link);
+  }
+
+  .adr-description {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-loose);
+    letter-spacing: var(--letter-spacing-slight);
+    margin: 0 0 var(--spacing-md);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* CTA is the clear action - always visible, distinct from tags */
+  .read-more {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--em-md);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-muted);
+    transition: all var(--transition-fast);
+    margin-top: var(--spacing-sm);
+    letter-spacing: var(--letter-spacing-subtle);
+  }
+
+  .arrow-icon {
+    width: var(--icon-size-sm);
+    height: var(--icon-size-sm);
+    transition: transform var(--transition-fast);
+    opacity: var(--opacity-muted);
+  }
+
+  @media (hover: hover) {
+    .adr-card:hover .read-more {
+      color: var(--color-link);
+    }
+
+    .adr-card:hover .arrow-icon {
+      transform: translateX(var(--translate-xs));
+      opacity: 1;
+    }
+  }
+
+  .adr-card:focus-within .read-more {
+    color: var(--color-link);
+  }
+
+  .adr-card:focus-within .arrow-icon {
+    opacity: 1;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 640px) {
+    .page-title {
+      font-size: var(--font-size-8xl);
+    }
+
+    .page-subtitle {
+      font-size: var(--font-size-xl);
+    }
+
+    .card-link {
+      padding: var(--spacing-md);
+    }
+
+    .card-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--spacing-xs);
+    }
+
+    .adr-title {
+      font-size: var(--font-size-2xl);
+    }
+  }
+
+  /* Extra small screens (iPhone SE 375px) */
+  @media (max-width: 400px) {
+    .page-title {
+      font-size: var(--font-size-6xl);
+    }
+
+    .card-link {
+      padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    .adr-title {
+      font-size: var(--font-size-xl);
+    }
+
+    .adr-description {
+      font-size: var(--font-size-xs);
+    }
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .adr-card,
+    .adr-card:hover {
+      transform: none;
+    }
+
+    .arrow-icon {
+      transform: none;
+    }
+
+    .adr-status,
+    .read-more {
+      transition: none;
+    }
+  }
+</style>

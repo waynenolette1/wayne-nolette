@@ -1,0 +1,197 @@
+---
+import { getCollection, render } from 'astro:content';
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import { formatDate } from '../../utils/date';
+import { generateBreadcrumbSchema } from '../../utils/seo';
+
+export async function getStaticPaths() {
+  const adrs = await getCollection('adrs');
+  return adrs.map((adr) => {
+    // Find related ADRs based on shared tags
+    const relatedAdrs = adrs
+      .filter((other) => other.id !== adr.id)
+      .filter((other) => {
+        const sharedTags = adr.data.tags?.filter((tag: string) =>
+          other.data.tags?.includes(tag)
+        );
+        return sharedTags && sharedTags.length > 0;
+      })
+      .slice(0, 3);
+
+    return {
+      params: { id: adr.id },
+      props: { adr, relatedAdrs },
+    };
+  });
+}
+
+const { adr, relatedAdrs = [] } = Astro.props;
+const { Content } = await render(adr);
+const { title, description, pubDate, status, deciders, tags } = adr.data;
+
+const formattedDate = formatDate(pubDate);
+
+// Status badge configuration with icons
+const STATUS_CONFIG = {
+  accepted: { icon: '&#10003;', label: 'Accepted' },
+  proposed: { icon: '&#9679;', label: 'Proposed' },
+  deprecated: { icon: '&#10005;', label: 'Deprecated' },
+  superseded: { icon: '&#8594;', label: 'Superseded' },
+} as const;
+
+const statusKey = status as keyof typeof STATUS_CONFIG;
+const statusConfig = STATUS_CONFIG[statusKey] || STATUS_CONFIG.proposed;
+
+// Generate breadcrumb schema for SEO
+const breadcrumbSchema = generateBreadcrumbSchema(
+  [
+    { name: 'Home', url: import.meta.env.BASE_URL },
+    { name: 'ADRs', url: `${import.meta.env.BASE_URL}adrs/` },
+    { name: title, url: `${import.meta.env.BASE_URL}adrs/${adr.id}/` },
+  ],
+  Astro.site?.toString() || ''
+);
+
+const footerLinks = [
+  {
+    url: `${import.meta.env.BASE_URL}adrs/`,
+    text: 'Back to ADRs',
+    direction: 'left' as const,
+  },
+  {
+    url: `${import.meta.env.BASE_URL}writing/`,
+    text: 'View Writing',
+    direction: 'right' as const,
+  },
+];
+---
+
+<ArticleLayout
+  title={title}
+  description={description}
+  backUrl={`${import.meta.env.BASE_URL}adrs/`}
+  backText="All ADRs"
+  ctaText="Questions about this architectural decision?"
+  footerLinks={footerLinks}
+  publishedTime={pubDate.toISOString()}
+  breadcrumbSchema={breadcrumbSchema}
+  headerClass="adr-header"
+  contentClass="adr-content"
+  contentId="adr-content"
+>
+  <!-- Status badge -->
+  <Fragment slot="header-badges">
+    <div class="status-badge" data-status={status}>
+      <span
+        class="status-icon"
+        aria-hidden="true"
+        set:html={statusConfig.icon}
+      />
+      <span class="status-label">{statusConfig.label}</span>
+    </div>
+  </Fragment>
+
+  <!-- Decision Record Info Box -->
+  <Fragment slot="header-extra">
+    <div class="info-box">
+      <div class="info-box-label">Decision Record</div>
+      <div class="info-box-meta">
+        <span
+          ><strong>Date:</strong>
+          <time datetime={pubDate.toISOString()}>{formattedDate}</time></span
+        >
+        {
+          deciders && deciders.length > 0 && (
+            <span>
+              <strong>Deciders:</strong> {deciders.join(', ')}
+            </span>
+          )
+        }
+      </div>
+    </div>
+
+    {
+      tags && tags.length > 0 && (
+        <div class="labeled-tags">
+          <span class="labeled-tags-label">Tags:</span>
+          <div class="labeled-tags-list">
+            {tags.map((tag) => (
+              <span class="labeled-tag-subtle">{tag}</span>
+            ))}
+          </div>
+        </div>
+      )
+    }
+  </Fragment>
+
+  <!-- Related ADRs -->
+  <Fragment slot="related">
+    {
+      relatedAdrs && relatedAdrs.length > 0 && (
+        <section class="related-articles">
+          <h2>Related ADRs</h2>
+          <div class="related-grid">
+            {relatedAdrs.map((related) => (
+              <a
+                href={`${import.meta.env.BASE_URL}adrs/${related.id}/`}
+                class="related-card"
+              >
+                <span class="related-title">{related.data.title}</span>
+                <span class="related-description">
+                  {related.data.description}
+                </span>
+                {related.data.tags && related.data.tags.length > 0 && (
+                  <div class="related-tags">
+                    {related.data.tags.slice(0, 3).map((tag: string) => (
+                      <span class="related-tag">{tag}</span>
+                    ))}
+                  </div>
+                )}
+              </a>
+            ))}
+          </div>
+        </section>
+      )
+    }
+  </Fragment>
+
+  <!-- Main content -->
+  <Content />
+</ArticleLayout>
+
+<style>
+  /* ===== Status Badge ===== */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-widest);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--status-color) 12%, transparent);
+    color: var(--status-color);
+    border: 1px solid color-mix(in srgb, var(--status-color) 25%, transparent);
+    margin-bottom: var(--spacing-md);
+  }
+
+  .status-badge[data-status='accepted'] {
+    --status-color: var(--color-success);
+  }
+
+  .status-badge[data-status='proposed'] {
+    --status-color: var(--color-warning);
+  }
+
+  .status-badge[data-status='deprecated'],
+  .status-badge[data-status='superseded'] {
+    --status-color: var(--color-text-muted);
+  }
+
+  .status-icon {
+    font-size: 1em;
+    line-height: var(--line-height-none);
+  }
+</style>

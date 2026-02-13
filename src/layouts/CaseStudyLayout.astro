@@ -1,0 +1,292 @@
+---
+import ArticleLayout from './ArticleLayout.astro';
+import type { CollectionEntry } from 'astro:content';
+import { generateBreadcrumbSchema } from '../utils/seo';
+
+/**
+ * Props for the CaseStudyLayout component.
+ * Uses ArticleLayout for shared structure with case-study-specific slots.
+ */
+interface Props {
+  /** The case-studies collection entry containing study data and content */
+  study: CollectionEntry<'case-studies'>;
+  /** Related case studies based on shared tech or themes */
+  relatedStudies?: CollectionEntry<'case-studies'>[];
+  /** Related writing articles that reference this case study */
+  relatedPosts?: CollectionEntry<'writing'>[];
+}
+
+const { study, relatedStudies = [], relatedPosts = [] } = Astro.props;
+const {
+  title,
+  description,
+  role,
+  duration,
+  outcome,
+  tech,
+  skills,
+  metrics,
+  ownership,
+} = study.data;
+
+// Map skill slugs to display names
+const skillLabels: Record<string, string> = {
+  'systems-design': 'Systems Design',
+  performance: 'Performance',
+  'cost-optimization': 'Cost Optimization',
+  reliability: 'Reliability',
+  'ml-infrastructure': 'ML Infrastructure',
+  'data-engineering': 'Data Engineering',
+  'technical-leadership': 'Technical Leadership',
+  'developer-experience': 'Developer Experience',
+};
+
+// Generate breadcrumb schema for SEO
+const breadcrumbSchema = generateBreadcrumbSchema(
+  [
+    { name: 'Home', url: import.meta.env.BASE_URL },
+    { name: 'Case Studies', url: `${import.meta.env.BASE_URL}case-studies/` },
+    {
+      name: title,
+      url: `${import.meta.env.BASE_URL}case-studies/${study.id}/`,
+    },
+  ],
+  Astro.site?.toString() || ''
+);
+
+const footerLinks = [
+  {
+    url: `${import.meta.env.BASE_URL}case-studies/`,
+    text: 'Back to Case Studies',
+    direction: 'left' as const,
+  },
+  {
+    url: `${import.meta.env.BASE_URL}resume/`,
+    text: 'View Resume',
+    direction: 'right' as const,
+  },
+];
+---
+
+<ArticleLayout
+  title={title}
+  description={description}
+  backUrl={`${import.meta.env.BASE_URL}case-studies/`}
+  backText="All Case Studies"
+  ctaText="Want to discuss this project or similar work?"
+  footerLinks={footerLinks}
+  breadcrumbSchema={breadcrumbSchema}
+  headerClass="study-header"
+  contentClass="study-content"
+  contentId="study-content"
+  ogType="website"
+>
+  <!-- TL;DR Summary Box -->
+  <Fragment slot="header-extra">
+    {/* Key Metrics Callout - most prominent element */}
+    {
+      metrics && (metrics.primary || metrics.secondary) && (
+        <div class="metrics-hero">
+          {metrics.primary && (
+            <span class="metric-primary">{metrics.primary}</span>
+          )}
+          {metrics.secondary && (
+            <span class="metric-secondary">{metrics.secondary}</span>
+          )}
+        </div>
+      )
+    }
+
+    <div class="info-box">
+      <div class="info-box-label">TL;DR</div>
+      <p class="info-box-description">{description}</p>
+      {
+        outcome && (
+          <div class="info-box-highlight">
+            <strong>Result:</strong> {outcome}
+          </div>
+        )
+      }
+      <div class="info-box-meta">
+        {
+          role && (
+            <span>
+              <strong>Role:</strong> {role}
+            </span>
+          )
+        }
+        {
+          duration && (
+            <span>
+              <strong>Timeline:</strong> {duration}
+            </span>
+          )
+        }
+      </div>
+      {
+        ownership && (
+          <div class="info-box-footer">
+            <strong>What I did:</strong> {ownership}
+          </div>
+        )
+      }
+    </div>
+
+    {
+      skills && skills.length > 0 && (
+        <div class="labeled-tags">
+          <span class="labeled-tags-label">Skills demonstrated:</span>
+          <div class="labeled-tags-list">
+            {skills.map((skill: string) => (
+              <span class="labeled-tag-accent">
+                {skillLabels[skill] || skill}
+              </span>
+            ))}
+          </div>
+        </div>
+      )
+    }
+
+    {
+      tech && tech.length > 0 && (
+        <div class="labeled-tags">
+          <span class="labeled-tags-label">Technologies:</span>
+          <div class="labeled-tags-list">
+            {tech.map((t: string) => (
+              <span class="labeled-tag-subtle">{t}</span>
+            ))}
+          </div>
+        </div>
+      )
+    }
+  </Fragment>
+
+  <!-- Related Case Studies and Writing -->
+  <Fragment slot="related">
+    {
+      relatedPosts && relatedPosts.length > 0 && (
+        <section class="related-articles">
+          <h2>Technical Deep-Dives</h2>
+          <p class="related-intro">
+            {relatedPosts.length} article{relatedPosts.length === 1 ? '' : 's'}{' '}
+            covering the architecture and implementation of this system.
+          </p>
+          <div class="related-grid">
+            {relatedPosts.map((post) => (
+              <a
+                href={`${import.meta.env.BASE_URL}writing/${post.id}/`}
+                class="related-card"
+              >
+                <span class="related-title">{post.data.title}</span>
+                <span class="related-description">{post.data.description}</span>
+                <div class="related-meta-row">
+                  <span class="related-date">
+                    {post.data.pubDate.toLocaleDateString('en-US', {
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </span>
+                  {post.data.tags && post.data.tags.length > 0 && (
+                    <div class="related-tags">
+                      {post.data.tags.slice(0, 3).map((t: string) => (
+                        <span class="related-tag">{t}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+      )
+    }
+    {
+      relatedStudies && relatedStudies.length > 0 && (
+        <section class="related-articles">
+          <h2>Related Case Studies</h2>
+          <div class="related-grid">
+            {relatedStudies.map((related) => (
+              <a
+                href={`${import.meta.env.BASE_URL}case-studies/${related.id}/`}
+                class="related-card"
+              >
+                <span class="related-title">{related.data.title}</span>
+                <span class="related-description">
+                  {related.data.description}
+                </span>
+                {related.data.tech && related.data.tech.length > 0 && (
+                  <div class="related-tags">
+                    {related.data.tech.slice(0, 3).map((t: string) => (
+                      <span class="related-tag">{t}</span>
+                    ))}
+                  </div>
+                )}
+              </a>
+            ))}
+          </div>
+        </section>
+      )
+    }
+  </Fragment>
+
+  <!-- Main content -->
+  <slot />
+</ArticleLayout>
+
+<style>
+  /* ===== Metrics Hero ===== */
+  .metrics-hero {
+    display: flex;
+    align-items: baseline;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-xl) var(--spacing-lg);
+    background: linear-gradient(
+      135deg,
+      var(--color-accent-08) 0%,
+      var(--color-gradient-purple-08) 100%
+    );
+    border: 1px solid var(--color-accent-20);
+    border-radius: var(--radius-lg);
+  }
+
+  .metric-primary {
+    font-size: var(--font-size-9xl);
+    font-weight: var(--font-weight-extrabold);
+    background: linear-gradient(
+      135deg,
+      var(--color-accent) 0%,
+      var(--color-gradient-purple) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: var(--line-height-tight);
+    letter-spacing: var(--letter-spacing-tighter);
+  }
+
+  .metric-secondary {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-muted);
+    letter-spacing: var(--letter-spacing-snug);
+    display: flex;
+    align-items: center;
+  }
+
+  @media (max-width: 640px) {
+    .metrics-hero {
+      flex-direction: column;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-lg) var(--spacing-md);
+    }
+
+    .metric-primary {
+      font-size: var(--font-size-stat);
+    }
+
+    .metric-secondary {
+      font-size: var(--font-size-xl);
+    }
+  }
+</style>

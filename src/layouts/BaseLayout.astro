@@ -1,0 +1,3423 @@
+---
+import '../styles/global.css';
+import '../styles/components.css';
+import '../styles/info-tags.css';
+import '../styles/print.css';
+import { ClientRouter } from 'astro:transitions';
+import {
+  WEB_VITALS_SCRIPT,
+  DEV_PERFORMANCE_REPORTER,
+} from '../utils/performance';
+import { GLOBAL_ERROR_HANDLER } from '../utils/errors';
+import { SITE_CONFIG } from '../config/constants';
+import SearchDialog from '../components/SearchDialog.astro';
+
+/**
+ * Props for the BaseLayout component.
+ * This is the master layout that wraps all pages.
+ */
+interface Props {
+  /** Page title - displayed in browser tab and meta tags */
+  title: string;
+  /** Page description for SEO and social sharing */
+  description?: string;
+  /** Open Graph type - 'article' for blog posts, 'website' for other pages */
+  ogType?: 'website' | 'article';
+  /** ISO date string for article publication date (used in og:article:published_time) */
+  publishedTime?: string;
+  /** Optional breadcrumb schema for SEO */
+  breadcrumbSchema?: object | null;
+  /** Set to true for error pages (404, offline) to add noindex meta tag */
+  noindex?: boolean;
+}
+
+const {
+  title,
+  description = 'Tech Manager focused on AI systems, cloud automation, GCP, BigQuery, DevOps, and data-powered decisioning.',
+  ogType = 'website',
+  publishedTime,
+  breadcrumbSchema,
+  noindex = false,
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const siteName = SITE_CONFIG.name;
+// Remove BASE_URL from path for consistent comparison
+const currentPath = Astro.url.pathname.replace(import.meta.env.BASE_URL, '/');
+const isDev = import.meta.env.DEV;
+const enableAnalytics = import.meta.env.PROD;
+
+const navLinks = [
+  { href: `${import.meta.env.BASE_URL}case-studies/`, label: 'Work' },
+  { href: `${import.meta.env.BASE_URL}writing/`, label: 'Writing' },
+  { href: `${import.meta.env.BASE_URL}resume/`, label: 'Resume' },
+];
+
+// JSON-LD structured data for SEO
+const personSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: SITE_CONFIG.name,
+  jobTitle: SITE_CONFIG.title,
+  description: SITE_CONFIG.description,
+  url: Astro.site?.toString(),
+  email: SITE_CONFIG.email,
+  sameAs: [SITE_CONFIG.github, SITE_CONFIG.linkedin],
+  knowsAbout: [
+    'AI Systems',
+    'Cloud Automation',
+    'Google Cloud Platform',
+    'BigQuery',
+    'DevOps',
+    'Data Pipelines',
+    'Python',
+    'Engineering Management',
+    'Process Improvement',
+  ],
+};
+
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: siteName,
+  url: Astro.site?.toString(),
+  author: {
+    '@type': 'Person',
+    name: SITE_CONFIG.name,
+    url: Astro.site?.toString(),
+  },
+  // SearchAction enables Google sitelinks search box
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: {
+      '@type': 'EntryPoint',
+      urlTemplate: `${Astro.site?.toString() || ''}?q={search_term_string}`,
+    },
+    'query-input': 'required name=search_term_string',
+  },
+};
+
+// For article pages, add Article schema
+const articleSchema =
+  ogType === 'article' && publishedTime
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'TechArticle',
+        headline: title,
+        description: description,
+        url: canonicalURL.toString(),
+        datePublished: publishedTime,
+        author: {
+          '@type': 'Person',
+          name: SITE_CONFIG.name,
+          url: Astro.site?.toString(),
+        },
+      }
+    : null;
+---
+
+<!doctype html>
+<html
+  lang="en"
+  data-base-url={import.meta.env.BASE_URL}
+  style="background-color: var(--color-bg); color: var(--color-text);"
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+
+    {
+      /* @font-face declarations — inline so we can use import.meta.env.BASE_URL for paths */
+    }
+    <Fragment
+      set:html={`<style>
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('${import.meta.env.BASE_URL}fonts/dm-sans-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('${import.meta.env.BASE_URL}fonts/space-grotesk-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 500;
+  font-display: swap;
+  src: url('${import.meta.env.BASE_URL}fonts/jetbrains-mono-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+</style>`}
+    />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href={`${import.meta.env.BASE_URL}favicon.svg`}
+    />
+    <link rel="canonical" href={canonicalURL} />
+    <meta name="generator" content={Astro.generator} />
+
+    <!-- PWA Manifest -->
+    <link
+      rel="manifest"
+      href={`${import.meta.env.BASE_URL}manifest.webmanifest`}
+    />
+    <meta name="theme-color" content="#0891b2" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="Wayne Nolette" />
+
+    <!-- Font preloading - DM Sans is critical for LCP -->
+    <link
+      rel="preload"
+      href={`${import.meta.env.BASE_URL}fonts/dm-sans-latin.woff2`}
+      as="font"
+      type="font/woff2"
+      crossorigin
+      fetchpriority="high"
+    />
+    <!-- Space Grotesk for display headings -->
+    <link
+      rel="preload"
+      href={`${import.meta.env.BASE_URL}fonts/space-grotesk-latin.woff2`}
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <!-- Code font uses prefetch (lower priority) - not needed for initial paint -->
+    <link
+      rel="prefetch"
+      href={`${import.meta.env.BASE_URL}fonts/jetbrains-mono-latin.woff2`}
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+
+    <!-- DNS prefetch and preconnect for external resources -->
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
+    <link rel="preconnect" href="https://github.com" />
+    <link rel="dns-prefetch" href="https://www.linkedin.com" />
+    <!-- Plausible analytics - preconnect for faster script loading -->
+    <link rel="dns-prefetch" href="https://plausible.io" />
+    <link rel="preconnect" href="https://plausible.io" crossorigin />
+
+    <!-- Prefetch likely navigation destinations -->
+    <link
+      rel="prefetch"
+      href={`${import.meta.env.BASE_URL}case-studies/`}
+      as="document"
+    />
+    <link
+      rel="prefetch"
+      href={`${import.meta.env.BASE_URL}writing/`}
+      as="document"
+    />
+
+    <title>{title} | {siteName}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content={SITE_CONFIG.name} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+
+    <!-- Open Graph -->
+    <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:site_name" content={siteName} />
+    <meta
+      property="og:image"
+      content={new URL(
+        `${import.meta.env.BASE_URL}og-image.png`,
+        Astro.site
+      ).toString()}
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:alt" content={`${siteName} - ${title}`} />
+    {
+      publishedTime && (
+        <meta property="article:published_time" content={publishedTime} />
+      )
+    }
+    {
+      ogType === 'article' && (
+        <meta property="article:author" content={SITE_CONFIG.name} />
+      )
+    }
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta
+      name="twitter:image"
+      content={new URL(
+        `${import.meta.env.BASE_URL}og-image.png`,
+        Astro.site
+      ).toString()}
+    />
+    <meta name="twitter:image:alt" content={`${siteName} - ${title}`} />
+
+    <!-- RSS -->
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title={siteName}
+      href={`${import.meta.env.BASE_URL}rss.xml`}
+    />
+
+    <!-- JSON-LD Structured Data -->
+    <script
+      is:inline
+      type="application/ld+json"
+      set:html={JSON.stringify(personSchema)}
+    />
+    <script
+      is:inline
+      type="application/ld+json"
+      set:html={JSON.stringify(websiteSchema)}
+    />
+    {
+      articleSchema && (
+        <script
+          is:inline
+          type="application/ld+json"
+          set:html={JSON.stringify(articleSchema)}
+        />
+      )
+    }
+    {
+      breadcrumbSchema && (
+        <script
+          is:inline
+          type="application/ld+json"
+          set:html={JSON.stringify(breadcrumbSchema)}
+        />
+      )
+    }
+
+    <!-- Error handling - runs early to catch all errors -->
+    <script is:inline set:html={GLOBAL_ERROR_HANDLER} />
+
+    <!-- Performance tracking - Core Web Vitals -->
+    <script is:inline set:html={WEB_VITALS_SCRIPT} />
+
+    <!-- Dev-only: Console reporter for CWV metrics -->
+    {isDev && <script is:inline set:html={DEV_PERFORMANCE_REPORTER} />}
+
+    <!-- View Transitions for smooth page navigation -->
+    <!-- fallback="swap" for faster navigation on slower devices -->
+    <ClientRouter fallback="swap" />
+
+    <!-- Disable View Transitions on mobile for instant navigation -->
+    <script is:inline>
+      (function () {
+        // Guard to prevent duplicate listener registration
+        if (window.__mobileNavBypassRegistered) return;
+        window.__mobileNavBypassRegistered = true;
+
+        // Check if mobile/touch device
+        var isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        if (!isMobile) return;
+
+        // On mobile, intercept link clicks and do standard navigation
+        // This bypasses View Transitions' prefetch-then-navigate which feels slow
+        document.addEventListener(
+          'click',
+          function (e) {
+            var link = e.target.closest('a');
+            if (!link) return;
+
+            var href = link.getAttribute('href');
+            if (!href) return;
+
+            // Only handle internal links
+            if (
+              href.startsWith('http') &&
+              !href.startsWith(window.location.origin)
+            )
+              return;
+            if (href.startsWith('#')) return;
+            if (href.startsWith('mailto:') || href.startsWith('tel:')) return;
+            if (link.hasAttribute('download')) return;
+            if (link.target === '_blank') return;
+
+            // Prevent View Transitions from handling this
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Do instant navigation
+            window.location.href = href;
+          },
+          true
+        ); // Use capture phase to run before View Transitions
+      })();
+    </script>
+
+    <!-- Privacy-respecting analytics (production only) -->
+    <!--
+      Note: SRI (Subresource Integrity) is intentionally not used for Plausible.
+      Plausible updates their script regularly for bug fixes and improvements,
+      which would break SRI hashes. Self-hosting the script is an alternative,
+      but adds maintenance burden. Plausible is a trusted, privacy-focused
+      analytics provider loaded over HTTPS.
+    -->
+    {
+      enableAnalytics && (
+        <script
+          is:inline
+          defer
+          data-domain={SITE_CONFIG.domain}
+          src="https://plausible.io/js/script.js"
+        />
+      )
+    }
+
+    <!-- Service Worker registration for offline support (desktop only) -->
+    <script is:inline>
+      (function () {
+        // Guard to prevent multiple registration attempts
+        if (window.__swRegistrationHandled) return;
+        window.__swRegistrationHandled = true;
+
+        if ('serviceWorker' in navigator) {
+          var isMobile =
+            'ontouchstart' in window || navigator.maxTouchPoints > 0;
+          if (isMobile) {
+            // Unregister service worker on mobile - it slows down navigation
+            navigator.serviceWorker
+              .getRegistrations()
+              .then(function (registrations) {
+                registrations.forEach(function (registration) {
+                  // Catch individual unregister failures to prevent unhandled rejections
+                  registration.unregister().catch(function () {});
+                });
+              })
+              .catch(function () {
+                // Service worker API may fail in some contexts
+              });
+          } else {
+            // Register service worker for desktop
+            function registerSW() {
+              var baseUrl =
+                document.documentElement.getAttribute('data-base-url') || '/';
+              navigator.serviceWorker
+                .register(baseUrl + 'sw.js')
+                .catch(function () {});
+            }
+            // Check if page already loaded (can happen with View Transitions)
+            if (document.readyState === 'complete') {
+              registerSW();
+            } else {
+              window.addEventListener('load', registerSW, { once: true });
+            }
+          }
+        }
+      })();
+    </script>
+
+    <!-- Console Easter Egg for curious developers - deferred to not block rendering -->
+    <script is:inline>
+      window.addEventListener(
+        'load',
+        function () {
+          // Defer easter egg to after page is fully loaded
+          setTimeout(function () {
+            var styles = [
+              'color: #06b6d4',
+              'font-size: 0.875rem',
+              'font-family: monospace',
+              'font-weight: 700',
+            ].join(';');
+
+            var asciiArt = [
+              '',
+              '    ╔═══════════════════════════════════════════════════════════╗',
+              '    ║                                                           ║',
+              '    ║   You opened DevTools on a portfolio site.                ║',
+              '    ║   We are the same.                                        ║',
+              '    ║                                                           ║',
+              '    ║   ┌─────────────────────────────────────────────────┐     ║',
+              '    ║   │  // This site has no React, no Redux, no       │     ║',
+              '    ║   │  // state management library. Just HTML.       │     ║',
+              "    ║   │  // I know. I'm as surprised as you are.       │     ║",
+              '    ║   └─────────────────────────────────────────────────┘     ║',
+              '    ║                                                           ║',
+              '    ║   No webpack. No 400MB node_modules. The build takes      ║',
+              "    ║   1.2 seconds. Yes, I timed it. Yes, I'm proud.          ║",
+              '    ║                                                           ║',
+              '    ║   Source: github.com/waynenolette1/wayne-nolette           ║',
+              '    ║                                                           ║',
+              '    ║   P.S. Try Cmd/Ctrl + K. It does a thing.                 ║',
+              '    ║                                                           ║',
+              '    ╚═══════════════════════════════════════════════════════════╝',
+              '',
+            ].join('\n');
+
+            // eslint-disable-next-line no-console -- Intentional developer easter egg
+            console.log('%c' + asciiArt, styles);
+
+            // Hidden command for extra curious devs
+            window.__wn = {
+              hire: function () {
+                // eslint-disable-next-line no-console -- Intentional developer easter egg
+                console.log(
+                  "%c\u{1F4E7} Waynenolette@gmail.com - Let's chat!",
+                  'color: #10b981; font-size: 1rem; font-weight: 700;'
+                );
+              },
+              stack: function () {
+                // eslint-disable-next-line no-console -- Intentional developer easter egg
+                console.table({
+                  Framework: 'Astro 5.x',
+                  Language: 'TypeScript',
+                  Styling: 'CSS (no frameworks)',
+                  Testing: 'Vitest + Playwright',
+                  Hosting: 'GitHub Pages',
+                  'CI/CD': 'GitHub Actions',
+                });
+              },
+              help: function () {
+                // eslint-disable-next-line no-console -- Intentional developer easter egg
+                console.log(
+                  '%cAvailable commands:',
+                  'color: #06b6d4; font-weight: bold;'
+                );
+                // eslint-disable-next-line no-console -- Intentional developer easter egg
+                console.log('  __wn.hire()  - Get in touch');
+                // eslint-disable-next-line no-console -- Intentional developer easter egg
+                console.log('  __wn.stack() - View tech stack');
+                // eslint-disable-next-line no-console -- Intentional developer easter egg
+                console.log('  __wn.help()  - Show this message');
+              },
+            };
+          }, 100);
+        },
+        { once: true }
+      );
+    </script>
+  </head>
+  <body>
+    <!-- Skip to main content link for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Scroll progress bar -->
+    <div
+      class="scroll-progress-bar"
+      id="scroll-progress-bar"
+      aria-hidden="true"
+    >
+    </div>
+
+    <!-- Page Loading Indicator -->
+    <div class="page-loader" id="page-loader" aria-hidden="true">
+      <div class="loader-spinner"></div>
+    </div>
+
+    <!-- Mobile menu backdrop overlay -->
+    <div
+      class="mobile-menu-backdrop"
+      id="mobile-menu-backdrop"
+      aria-hidden="true"
+    >
+    </div>
+
+    <!-- Mobile menu panel (outside header to avoid stacking context issues) -->
+    <div class="mobile-menu-panel" id="mobile-menu-panel" aria-hidden="true">
+      {
+        navLinks.map((link) => {
+          const section = link.href
+            .replace(import.meta.env.BASE_URL, '')
+            .replace(/\/$/, '');
+          // Only mark active if section is not empty and path matches
+          const normalizedPath = currentPath.replace(/\/$/, '');
+          const isActive =
+            section !== '' &&
+            (normalizedPath === `/${section}` ||
+              currentPath.startsWith(`/${section}/`));
+
+          return (
+            <a
+              href={link.href}
+              class:list={[{ active: isActive }]}
+              aria-current={isActive ? 'page' : undefined}
+              data-astro-prefetch="false"
+            >
+              {link.label}
+            </a>
+          );
+        })
+      }
+    </div>
+
+    <div class="site-wrapper">
+      <header transition:name="header" transition:persist>
+        <nav aria-label="Main navigation">
+          <a href={`${import.meta.env.BASE_URL}`} class="nav-name">
+            <span class="name-text">Wayne Nolette</span>
+            <span class="name-role">{SITE_CONFIG.title}</span>
+          </a>
+          <div class="nav-links">
+            {
+              navLinks.map((link) => {
+                const section = link.href
+                  .replace(import.meta.env.BASE_URL, '')
+                  .replace(/\/$/, '');
+                // Only mark active if section is not empty and path matches
+                const normalizedPath = currentPath.replace(/\/$/, '');
+                const isActive =
+                  section !== '' &&
+                  (normalizedPath === `/${section}` ||
+                    currentPath.startsWith(`/${section}/`));
+
+                return (
+                  <a
+                    href={link.href}
+                    class:list={[{ active: isActive }]}
+                    aria-current={isActive ? 'page' : undefined}
+                  >
+                    {link.label}
+                  </a>
+                );
+              })
+            }
+          </div>
+          <div class="nav-actions">
+            <SearchDialog />
+            <button
+              class="mobile-menu-btn"
+              aria-label="Toggle menu"
+              aria-expanded="false"
+              aria-controls="mobile-menu-panel"
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </nav>
+      </header>
+
+      <main
+        id="main-content"
+        transition:name="main-content"
+        transition:animate="fade"
+      >
+        <slot />
+      </main>
+
+      <footer transition:name="footer" transition:persist>
+        <div class="footer-pattern"></div>
+        <div class="footer-content">
+          <!-- Back to top prompt -->
+          <button
+            class="back-to-top-prompt"
+            id="back-to-top-prompt"
+            aria-label="Scroll back to top"
+          >
+            <span class="back-to-top-text">Back to top</span>
+            <svg
+              class="back-to-top-arrow"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              aria-hidden="true"
+            >
+              <path d="M18 15l-6-6-6 6"></path>
+            </svg>
+          </button>
+
+          <div class="footer-brand">
+            <a href={`${import.meta.env.BASE_URL}`} class="footer-name"
+              >Wayne Nolette</a
+            >
+            <p class="footer-tagline">AI Systems & Cloud Automation</p>
+          </div>
+
+          <div class="footer-sections">
+            <div class="footer-section">
+              <span class="footer-section-title">Explore</span>
+              <div class="footer-section-links">
+                <a href={`${import.meta.env.BASE_URL}case-studies/`}>Work</a>
+                <a href={`${import.meta.env.BASE_URL}writing/`}>Writing</a>
+                <a href={`${import.meta.env.BASE_URL}resume/`}>Resume</a>
+              </div>
+            </div>
+
+            <div class="footer-section">
+              <span class="footer-section-title">Connect</span>
+              <div class="footer-social-links">
+                <a
+                  href={SITE_CONFIG.github}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="social-link"
+                  aria-label="GitHub"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+                    ></path>
+                  </svg>
+                </a>
+                <a
+                  href={SITE_CONFIG.linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="social-link"
+                  aria-label="LinkedIn"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
+                    ></path>
+                  </svg>
+                </a>
+                <a
+                  href={`${import.meta.env.BASE_URL}rss.xml`}
+                  class="social-link"
+                  aria-label="RSS Feed"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19 7.38 20 6.18 20C5 20 4 19 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1z"
+                    ></path>
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Scroll to top button -->
+    <button
+      type="button"
+      class="scroll-top"
+      aria-label="Scroll to top"
+      id="scroll-top"
+    >
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        aria-hidden="true"
+      >
+        <path d="M18 15l-6-6-6 6"></path>
+      </svg>
+    </button>
+
+    <!-- Client-side interactivity -->
+    <script is:inline type="module">
+      // ======================
+      // Listener Registration Guard
+      // ======================
+      // Prevent astro:after-swap listeners from stacking on each navigation
+      // Track which handlers are registered to prevent duplicates
+      if (!window.__registeredHandlers) {
+        window.__registeredHandlers = new Set();
+      }
+      window.__registerAfterSwap = (name, handler) => {
+        // Only register if this named handler isn't already registered
+        if (!window.__registeredHandlers.has(name)) {
+          window.__registeredHandlers.add(name);
+          document.addEventListener('astro:after-swap', handler);
+        }
+      };
+
+      // ======================
+      // Mermaid Diagrams (Lazy-loaded)
+      // ======================
+      // Simple, clean diagram rendering - no buttons, natural scroll/pan
+
+      let mermaidModule = null;
+      let mermaidLoading = false; // Prevent concurrent import attempts
+
+      async function initMermaid() {
+        const mermaidPres = document.querySelectorAll(
+          'pre[data-language="mermaid"]'
+        );
+
+        if (mermaidPres.length === 0) return;
+
+        // Prevent concurrent imports - wait if already loading
+        if (mermaidLoading) return;
+
+        // Lazy load mermaid only when needed
+        if (!mermaidModule) {
+          mermaidLoading = true;
+          let timeoutId = null;
+          try {
+            // Use Promise.race with proper timeout cleanup
+            const timeoutPromise = new Promise((_, reject) => {
+              timeoutId = setTimeout(
+                () => reject(new Error('Mermaid load timeout')),
+                10000
+              );
+            });
+            const importPromise =
+              import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs');
+            mermaidModule = await Promise.race([importPromise, timeoutPromise]);
+            // Clear timeout if import succeeded before timeout
+            if (timeoutId) clearTimeout(timeoutId);
+            mermaidLoading = false;
+          } catch (error) {
+            // Clear timeout on error to prevent leak
+            if (timeoutId) clearTimeout(timeoutId);
+            mermaidLoading = false;
+            console.error('Failed to load Mermaid:', error);
+            mermaidPres.forEach((pre) => {
+              pre.innerHTML = `<div class="diagram-error">Diagram could not be loaded</div>`;
+            });
+            return;
+          }
+        }
+
+        // Configure mermaid with clean, readable settings
+        mermaidModule.default.initialize({
+          startOnLoad: false,
+          theme: 'dark',
+          securityLevel: 'strict',
+          themeVariables: {
+            fontFamily: 'Inter, system-ui, sans-serif',
+            fontSize: '14px',
+          },
+          flowchart: {
+            useMaxWidth: false,
+            htmlLabels: false,
+            padding: 20,
+            nodeSpacing: 50,
+            rankSpacing: 50,
+            curve: 'basis',
+          },
+        });
+
+        // Replace each pre with a simple diagram container
+        let mermaidIdCounter = 0;
+        mermaidPres.forEach((pre) => {
+          const codeElement = pre.querySelector('code');
+          const content = codeElement
+            ? codeElement.textContent
+            : pre.textContent;
+
+          // Create simple wrapper
+          const wrapper = document.createElement('div');
+          wrapper.className = 'diagram-container';
+
+          // Create mermaid div
+          const mermaidDiv = document.createElement('div');
+          mermaidDiv.className = 'mermaid';
+          mermaidDiv.id = `mermaid-${mermaidIdCounter++}`;
+          mermaidDiv.textContent = content;
+
+          wrapper.appendChild(mermaidDiv);
+          // Guard against detached elements during View Transitions
+          if (pre.parentNode) {
+            pre.parentNode.replaceChild(wrapper, pre);
+          }
+        });
+
+        // Render all diagrams
+        try {
+          await mermaidModule.default.run();
+        } catch (e) {
+          console.error('Mermaid rendering error:', e);
+          // Update DOM to show error state for failed diagrams
+          // Query current containers since original pre elements were replaced
+          document
+            .querySelectorAll('.diagram-container')
+            .forEach((container) => {
+              if (!container.querySelector('.diagram-error')) {
+                container.innerHTML =
+                  '<div class="diagram-error">Diagram rendering failed</div>';
+              }
+            });
+        }
+      }
+
+      initMermaid().catch(function () {
+        // Mermaid init failure already logged in initMermaid
+      });
+      window.__registerAfterSwap('mermaid', initMermaid);
+
+      // ======================
+      // Mobile Menu
+      // ======================
+      // Focus trap handler for mobile menu
+      let focusTrapHandler = null;
+
+      const openMobileMenu = () => {
+        const mobilePanel = document.getElementById('mobile-menu-panel');
+        const menuBtn = document.querySelector('.mobile-menu-btn');
+        const backdrop = document.getElementById('mobile-menu-backdrop');
+        if (mobilePanel && menuBtn) {
+          mobilePanel.classList.add('open');
+          mobilePanel.setAttribute('aria-hidden', 'false');
+          menuBtn.setAttribute('aria-expanded', 'true');
+          if (backdrop) {
+            backdrop.classList.add('visible');
+          }
+          document.body.style.overflow = 'hidden'; // Prevent scroll when menu is open
+
+          // Set up focus trap
+          const focusableElements = mobilePanel.querySelectorAll('a');
+          const firstFocusable = focusableElements[0];
+          const lastFocusable = focusableElements[focusableElements.length - 1];
+
+          // Focus first link in menu
+          if (firstFocusable) {
+            firstFocusable.focus();
+          }
+
+          // Create focus trap handler (guard against duplicates to prevent memory leak)
+          if (focusTrapHandler) {
+            document.removeEventListener('keydown', focusTrapHandler);
+          }
+          focusTrapHandler = (e) => {
+            if (e.key !== 'Tab') return;
+
+            if (e.shiftKey) {
+              // Shift+Tab: if on first element, go to menu button
+              if (document.activeElement === firstFocusable) {
+                e.preventDefault();
+                menuBtn.focus();
+              } else if (document.activeElement === menuBtn) {
+                // From menu button, go to last menu item
+                e.preventDefault();
+                lastFocusable.focus();
+              }
+            } else {
+              // Tab: if on last element, go to menu button
+              if (document.activeElement === lastFocusable) {
+                e.preventDefault();
+                menuBtn.focus();
+              } else if (document.activeElement === menuBtn) {
+                // From menu button, go to first menu item
+                e.preventDefault();
+                firstFocusable.focus();
+              }
+            }
+          };
+
+          document.addEventListener('keydown', focusTrapHandler);
+        }
+      };
+
+      const closeMobileMenu = () => {
+        const mobilePanel = document.getElementById('mobile-menu-panel');
+        const menuBtn = document.querySelector('.mobile-menu-btn');
+        const backdrop = document.getElementById('mobile-menu-backdrop');
+        if (mobilePanel) {
+          mobilePanel.classList.remove('open');
+          mobilePanel.setAttribute('aria-hidden', 'true');
+        }
+        if (menuBtn) {
+          menuBtn.setAttribute('aria-expanded', 'false');
+          menuBtn.focus(); // Return focus to menu button when closing
+        }
+        if (backdrop) {
+          backdrop.classList.remove('visible');
+        }
+        document.body.style.overflow = ''; // Restore scroll
+
+        // Remove focus trap handler
+        if (focusTrapHandler) {
+          document.removeEventListener('keydown', focusTrapHandler);
+          focusTrapHandler = null;
+        }
+      };
+
+      // Store cleanup functions to prevent listener accumulation
+      let mobileMenuCleanup = null;
+
+      const initMobileMenu = () => {
+        // Clean up previous listeners if they exist
+        if (mobileMenuCleanup) {
+          mobileMenuCleanup();
+        }
+
+        const menuBtn = document.querySelector('.mobile-menu-btn');
+        const mobilePanel = document.getElementById('mobile-menu-panel');
+        const backdrop = document.getElementById('mobile-menu-backdrop');
+
+        if (!menuBtn || !mobilePanel) return;
+
+        // Menu button click handler
+        const handleMenuBtnClick = (e) => {
+          e.stopPropagation();
+          if (mobilePanel.classList.contains('open')) {
+            closeMobileMenu();
+          } else {
+            openMobileMenu();
+          }
+        };
+
+        // Backdrop click handler
+        const handleBackdropClick = () => closeMobileMenu();
+
+        // Link click handler
+        const handleLinkClick = () => closeMobileMenu();
+
+        // Outside click handler
+        const handleOutsideClick = (e) => {
+          if (
+            mobilePanel.classList.contains('open') &&
+            !mobilePanel.contains(e.target) &&
+            !menuBtn.contains(e.target)
+          ) {
+            closeMobileMenu();
+          }
+        };
+
+        // Escape key handler
+        const handleEscapeKey = (e) => {
+          if (e.key === 'Escape' && mobilePanel.classList.contains('open')) {
+            closeMobileMenu();
+          }
+        };
+
+        // Add listeners
+        menuBtn.addEventListener('click', handleMenuBtnClick);
+        if (backdrop) {
+          backdrop.addEventListener('click', handleBackdropClick);
+        }
+        const links = mobilePanel.querySelectorAll('a');
+        links.forEach((link) => {
+          link.addEventListener('click', handleLinkClick);
+        });
+        document.addEventListener('click', handleOutsideClick);
+        document.addEventListener('keydown', handleEscapeKey);
+
+        // Store cleanup function
+        mobileMenuCleanup = () => {
+          menuBtn.removeEventListener('click', handleMenuBtnClick);
+          if (backdrop) {
+            backdrop.removeEventListener('click', handleBackdropClick);
+          }
+          links.forEach((link) => {
+            link.removeEventListener('click', handleLinkClick);
+          });
+          document.removeEventListener('click', handleOutsideClick);
+          document.removeEventListener('keydown', handleEscapeKey);
+          // Also clean up focus trap handler if menu was left open during navigation
+          if (focusTrapHandler) {
+            document.removeEventListener('keydown', focusTrapHandler);
+            focusTrapHandler = null;
+          }
+        };
+      };
+
+      initMobileMenu();
+      window.__registerAfterSwap('mobileMenu', initMobileMenu);
+
+      // Ensure cleanup happens before View Transition to prevent listener leaks
+      // Uses guard pattern to prevent multiple registrations
+      if (!window.__mobileMenuBeforeSwapRegistered) {
+        window.__mobileMenuBeforeSwapRegistered = true;
+        document.addEventListener('astro:before-swap', () => {
+          closeMobileMenu();
+          if (mobileMenuCleanup) {
+            mobileMenuCleanup();
+            mobileMenuCleanup = null;
+          }
+        });
+      }
+
+      // ======================
+      // Scroll to Top Button (Throttled)
+      // Note: Header scroll styling is handled by initGlassNav with proper cleanup
+      // ======================
+      let scrollTopController = null;
+
+      const initScrollTopButton = () => {
+        // Cleanup previous listener if exists
+        if (scrollTopController) {
+          scrollTopController.abort();
+        }
+        scrollTopController = new AbortController();
+
+        const scrollTopBtn = document.getElementById('scroll-top');
+        const backToTopPrompt = document.getElementById('back-to-top-prompt');
+
+        if (!scrollTopBtn && !backToTopPrompt) return;
+
+        let scrollTopTicking = false;
+        window.addEventListener(
+          'scroll',
+          () => {
+            if (!scrollTopTicking) {
+              window.requestAnimationFrame(() => {
+                // Scroll to top button visibility
+                if (scrollTopBtn) {
+                  if (window.scrollY > 300) {
+                    scrollTopBtn.classList.add('visible');
+                  } else {
+                    scrollTopBtn.classList.remove('visible');
+                  }
+                }
+                scrollTopTicking = false;
+              });
+              scrollTopTicking = true;
+            }
+          },
+          { passive: true, signal: scrollTopController.signal }
+        );
+
+        if (scrollTopBtn) {
+          scrollTopBtn.addEventListener(
+            'click',
+            () => {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            },
+            { signal: scrollTopController.signal }
+          );
+        }
+
+        // Back to top prompt in footer
+        if (backToTopPrompt) {
+          backToTopPrompt.addEventListener(
+            'click',
+            () => {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            },
+            { signal: scrollTopController.signal }
+          );
+        }
+      };
+
+      initScrollTopButton();
+      window.__registerAfterSwap('scrollTopButton', initScrollTopButton);
+
+      // ======================
+      // Dark Theme Only (No Toggle)
+      // ======================
+      // Always set dark theme
+      document.documentElement.setAttribute('data-theme', 'dark');
+
+      // Re-apply dark theme after page navigation
+      window.__registerAfterSwap('darkTheme', () => {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      });
+
+      // Optionally add a loading indicator during transitions
+      // Only register once (these listeners survive View Transitions)
+      if (!window.__pageTransitionRegistered) {
+        window.__pageTransitionRegistered = true;
+        document.addEventListener('astro:before-preparation', () => {
+          document.body.classList.add('page-transitioning');
+        });
+
+        document.addEventListener('astro:after-swap', () => {
+          document.body.classList.remove('page-transitioning');
+        });
+      }
+
+      // ======================
+      // Scroll-Triggered Animations
+      // ======================
+      let scrollAnimationObserver = null;
+
+      const initScrollAnimations = () => {
+        // Disconnect previous observer to prevent memory leaks
+        if (scrollAnimationObserver) {
+          scrollAnimationObserver.disconnect();
+          scrollAnimationObserver = null;
+        }
+
+        const animatedElements =
+          document.querySelectorAll('.animate-on-scroll');
+
+        if (animatedElements.length === 0) return;
+
+        scrollAnimationObserver = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                if (scrollAnimationObserver) {
+                  scrollAnimationObserver.unobserve(entry.target);
+                }
+              }
+            });
+          },
+          { threshold: 0.1 }
+        );
+
+        animatedElements.forEach((el) => scrollAnimationObserver.observe(el));
+      };
+
+      // Initialize on page load
+      initScrollAnimations();
+
+      // Re-initialize after Astro page transitions
+      window.__registerAfterSwap('scrollAnimations', initScrollAnimations);
+
+      // ======================
+      // Lazy Loading Images with Blur-Up Effect
+      // ======================
+      const initLazyImages = () => {
+        const lazyImages = document.querySelectorAll('img[loading="lazy"]');
+
+        lazyImages.forEach((img) => {
+          // If already loaded (cached), mark as loaded immediately
+          if (img.complete && img.naturalHeight !== 0) {
+            img.classList.add('loaded');
+            return;
+          }
+
+          // Add loaded class when image finishes loading
+          img.addEventListener(
+            'load',
+            () => {
+              img.classList.add('loaded');
+            },
+            { once: true }
+          );
+
+          // Handle error case
+          img.addEventListener(
+            'error',
+            () => {
+              img.classList.add('loaded'); // Remove blur even on error
+            },
+            { once: true }
+          );
+        });
+      };
+
+      // Initialize on page load
+      initLazyImages();
+
+      // Re-initialize after Astro page transitions
+      window.__registerAfterSwap('lazyImages', initLazyImages);
+
+      // ======================
+      // Glassmorphism Navigation Enhancement
+      // ======================
+      let glassNavController = null;
+
+      const initGlassNav = () => {
+        // Cleanup previous listener if exists
+        if (glassNavController) {
+          glassNavController.abort();
+        }
+        glassNavController = new AbortController();
+
+        const header = document.querySelector('header');
+        if (!header) return;
+
+        // Add glass-nav class for enhanced glassmorphism
+        header.classList.add('glass-nav');
+
+        let ticking = false;
+
+        const updateNavStyle = () => {
+          const scrollY = window.scrollY;
+
+          if (scrollY > 50) {
+            header.classList.add('scrolled');
+          } else {
+            header.classList.remove('scrolled');
+          }
+
+          ticking = false;
+        };
+
+        window.addEventListener(
+          'scroll',
+          () => {
+            if (!ticking) {
+              requestAnimationFrame(updateNavStyle);
+              ticking = true;
+            }
+          },
+          { passive: true, signal: glassNavController.signal }
+        );
+
+        updateNavStyle();
+      };
+
+      initGlassNav();
+      window.__registerAfterSwap('glassNav', initGlassNav);
+
+      // ======================
+      // Scroll Progress Bar
+      // ======================
+      let scrollProgressController = null;
+
+      const initScrollProgress = () => {
+        // Cleanup previous listener if exists
+        if (scrollProgressController) {
+          scrollProgressController.abort();
+        }
+        scrollProgressController = new AbortController();
+
+        const progressBar = document.getElementById('scroll-progress-bar');
+        if (!progressBar) return;
+
+        const updateProgress = () => {
+          const scrollTop = window.scrollY;
+          const docHeight =
+            document.documentElement.scrollHeight - window.innerHeight;
+          if (docHeight <= 0) {
+            progressBar.style.width = '100%';
+            return;
+          }
+          const progress = (scrollTop / docHeight) * 100;
+          progressBar.style.width = `${Math.min(100, Math.max(0, progress))}%`;
+        };
+
+        let ticking = false;
+        window.addEventListener(
+          'scroll',
+          () => {
+            if (!ticking) {
+              requestAnimationFrame(() => {
+                updateProgress();
+                ticking = false;
+              });
+              ticking = true;
+            }
+          },
+          { passive: true, signal: scrollProgressController.signal }
+        );
+
+        updateProgress();
+      };
+
+      initScrollProgress();
+      window.__registerAfterSwap('scrollProgress', initScrollProgress);
+
+      // ======================
+      // Active Nav Link Update (for View Transitions)
+      // ======================
+      const updateActiveNavLinks = () => {
+        const baseUrl = document.documentElement.dataset.baseUrl || '/';
+        // Normalize current path: remove base URL and ensure leading slash
+        let currentPath = window.location.pathname;
+        if (
+          baseUrl !== '/' &&
+          currentPath.startsWith(baseUrl.replace(/\/$/, ''))
+        ) {
+          currentPath =
+            currentPath.slice(baseUrl.replace(/\/$/, '').length) || '/';
+        }
+        // Ensure leading slash
+        if (!currentPath.startsWith('/')) currentPath = '/' + currentPath;
+
+        const checkActive = (href) => {
+          // Get section from href (e.g., "case-studies" from "/wayne-nolette/case-studies/")
+          const section = href.replace(baseUrl, '').replace(/\/$/, '');
+          if (!section) return false; // Empty section means homepage link, skip
+
+          // Normalize for comparison
+          const normalizedPath = currentPath.replace(/\/$/, '');
+          const sectionPath = '/' + section;
+
+          // Match exact section or sub-pages
+          return (
+            normalizedPath === sectionPath ||
+            currentPath.startsWith(sectionPath + '/')
+          );
+        };
+
+        // Update desktop nav links
+        document.querySelectorAll('.nav-links a').forEach((link) => {
+          const isActive = checkActive(link.getAttribute('href') || '');
+          link.classList.toggle('active', isActive);
+          if (isActive) {
+            link.setAttribute('aria-current', 'page');
+          } else {
+            link.removeAttribute('aria-current');
+          }
+        });
+
+        // Update mobile menu links
+        document.querySelectorAll('.mobile-menu-panel a').forEach((link) => {
+          const isActive = checkActive(link.getAttribute('href') || '');
+          link.classList.toggle('active', isActive);
+          if (isActive) {
+            link.setAttribute('aria-current', 'page');
+          } else {
+            link.removeAttribute('aria-current');
+          }
+        });
+      };
+
+      // Update on View Transitions navigation
+      window.__registerAfterSwap('activeNavLinks', updateActiveNavLinks);
+
+      // ======================
+      // Page Loading Indicator
+      // ======================
+      // Only register these listeners once (they survive View Transitions)
+      if (!window.__pageLoaderRegistered) {
+        window.__pageLoaderRegistered = true;
+
+        const initPageLoader = () => {
+          const loader = document.getElementById('page-loader');
+          if (!loader) return;
+
+          // Show loader on navigation start
+          document.addEventListener('astro:before-preparation', () => {
+            loader.classList.add('loading');
+          });
+
+          // Hide loader on navigation complete
+          document.addEventListener('astro:page-load', () => {
+            setTimeout(() => {
+              loader.classList.remove('loading');
+            }, 50);
+          });
+        };
+
+        initPageLoader();
+      }
+
+      // ======================
+      // Keyboard Shortcuts for Power Users
+      // ======================
+      // Only register once (keydown listener survives View Transitions)
+      if (!window.__keyboardShortcutsRegistered) {
+        window.__keyboardShortcutsRegistered = true;
+
+        const initKeyboardShortcuts = () => {
+          // Get base URL from data attribute (set at build time) to avoid import.meta.env issues
+          const baseUrl = document.documentElement.dataset.baseUrl || '/';
+
+          document.addEventListener('keydown', (e) => {
+            // Ignore if user is typing in an input/textarea
+            if (
+              e.target instanceof HTMLInputElement ||
+              e.target instanceof HTMLTextAreaElement ||
+              e.target.isContentEditable
+            ) {
+              return;
+            }
+
+            // Only trigger on exact key (no modifiers except Shift for capital letters)
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+            switch (e.key.toLowerCase()) {
+              case 'h':
+                // H - Go to homepage
+                e.preventDefault();
+                window.location.href = baseUrl;
+                break;
+
+              case 'w':
+                // W - Go to writing
+                e.preventDefault();
+                window.location.href = `${baseUrl}writing/`;
+                break;
+
+              case 'c':
+                // C - Go to case studies
+                e.preventDefault();
+                window.location.href = `${baseUrl}case-studies/`;
+                break;
+
+              case 't':
+                // T - Scroll to top
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                break;
+
+              case '/':
+                // / - Show keyboard shortcuts help
+                e.preventDefault();
+                showShortcutsHelp();
+                break;
+
+              case 'escape':
+                // ESC - Close any open modals/overlays
+                closeOverlays();
+                break;
+            }
+          });
+        };
+
+        // Show keyboard shortcuts overlay
+        function showShortcutsHelp() {
+          const existingOverlay = document.getElementById('shortcuts-help');
+          if (existingOverlay) {
+            existingOverlay.remove();
+            return;
+          }
+
+          const overlay = document.createElement('div');
+          overlay.id = 'shortcuts-help';
+          overlay.className = 'shortcuts-overlay';
+          overlay.innerHTML = `
+          <div class="shortcuts-modal">
+            <div class="shortcuts-header">
+              <h3>Keyboard Shortcuts</h3>
+              <button type="button" class="close-btn" aria-label="Close">×</button>
+            </div>
+            <div class="shortcuts-content">
+              <div class="shortcut-row">
+                <kbd>H</kbd>
+                <span>Go to Home</span>
+              </div>
+              <div class="shortcut-row">
+                <kbd>W</kbd>
+                <span>Go to Writing</span>
+              </div>
+              <div class="shortcut-row">
+                <kbd>C</kbd>
+                <span>Go to Case Studies</span>
+              </div>
+              <div class="shortcut-row">
+                <kbd>T</kbd>
+                <span>Scroll to Top</span>
+              </div>
+              <div class="shortcut-row">
+                <kbd>/</kbd>
+                <span>Show this help</span>
+              </div>
+              <div class="shortcut-row">
+                <kbd>ESC</kbd>
+                <span>Close overlays</span>
+              </div>
+            </div>
+          </div>
+        `;
+
+          document.body.appendChild(overlay);
+
+          // Close on close button click
+          const closeBtn = overlay.querySelector('.close-btn');
+          if (closeBtn) {
+            closeBtn.addEventListener('click', () => overlay.remove());
+          }
+
+          // Close on click outside
+          overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+              overlay.remove();
+            }
+          });
+        }
+
+        function closeOverlays() {
+          document.getElementById('shortcuts-help')?.remove();
+          const searchDialog = document.getElementById('search-dialog');
+          if (searchDialog && searchDialog.open) searchDialog.close();
+        }
+
+        initKeyboardShortcuts();
+      } // End of keyboard shortcuts guard
+
+      // ======================
+      // Image Lightbox (Mobile)
+      // ======================
+      let lightboxController = null;
+      let lightboxKeyHandler = null;
+      let lightboxTouchResetTimeouts = [];
+
+      const initLightbox = () => {
+        // Clean up previous listeners
+        if (lightboxController) {
+          lightboxController.abort();
+        }
+        // Clean up previous keydown listener
+        if (lightboxKeyHandler) {
+          document.removeEventListener('keydown', lightboxKeyHandler);
+          lightboxKeyHandler = null;
+        }
+        // Clean up pending touch reset timeouts
+        lightboxTouchResetTimeouts.forEach((id) => clearTimeout(id));
+        lightboxTouchResetTimeouts = [];
+        lightboxController = new AbortController();
+        const signal = lightboxController.signal;
+
+        // Only enable on mobile/touch devices
+        if (window.innerWidth > 768) return;
+
+        // Create lightbox overlay if it doesn't exist
+        let lightbox = document.getElementById('image-lightbox');
+        if (!lightbox) {
+          lightbox = document.createElement('div');
+          lightbox.id = 'image-lightbox';
+          lightbox.className = 'lightbox-overlay';
+          lightbox.innerHTML = `
+            <button type="button" class="lightbox-close" aria-label="Close lightbox">&times;</button>
+            <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Enlarged view of image" style="max-width: 100%; height: auto;" />
+          `;
+          document.body.appendChild(lightbox);
+
+          // Close on overlay click (only once on element creation)
+          lightbox.addEventListener('click', (e) => {
+            if (
+              e.target === lightbox ||
+              e.target.classList.contains('lightbox-close')
+            ) {
+              closeLightbox();
+            }
+          });
+        }
+
+        // Set up escape key handler with cleanup tracking
+        lightboxKeyHandler = (e) => {
+          if (e.key === 'Escape' && lightbox.classList.contains('active')) {
+            closeLightbox();
+          }
+        };
+        document.addEventListener('keydown', lightboxKeyHandler);
+
+        const lightboxImg = lightbox.querySelector('img');
+
+        const openLightbox = (src, alt) => {
+          lightboxImg.src = src;
+          lightboxImg.alt = alt || '';
+          lightbox.classList.add('active');
+          document.body.style.overflow = 'hidden';
+        };
+
+        const closeLightbox = () => {
+          lightbox.classList.remove('active');
+          document.body.style.overflow = '';
+        };
+
+        // Find all zoomable images in article content
+        const images = document.querySelectorAll(
+          'article img:not(.no-zoom), .post-content img:not(.no-zoom)'
+        );
+
+        images.forEach((img) => {
+          // Skip small images (likely icons)
+          if (img.width < 100 || img.height < 100) return;
+
+          let touchStarted = false;
+          let touchHandled = false;
+          let startX = 0;
+          let startY = 0;
+          const MOVE_THRESHOLD = 10;
+
+          img.addEventListener(
+            'touchstart',
+            (e) => {
+              touchStarted = true;
+              touchHandled = false;
+              if (e.touches.length > 0) {
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+              }
+            },
+            { passive: true, signal }
+          );
+
+          img.addEventListener(
+            'touchend',
+            (e) => {
+              if (touchStarted && !touchHandled) {
+                let movedTooMuch = false;
+                if (e.changedTouches.length > 0) {
+                  const endX = e.changedTouches[0].clientX;
+                  const endY = e.changedTouches[0].clientY;
+                  const deltaX = Math.abs(endX - startX);
+                  const deltaY = Math.abs(endY - startY);
+                  movedTooMuch =
+                    deltaX > MOVE_THRESHOLD || deltaY > MOVE_THRESHOLD;
+                }
+
+                if (!movedTooMuch) {
+                  e.preventDefault();
+                  touchHandled = true;
+                  openLightbox(img.src, img.alt);
+                }
+              }
+
+              const resetTimeout = setTimeout(() => {
+                touchStarted = false;
+                touchHandled = false;
+                // Remove from tracking array
+                const idx = lightboxTouchResetTimeouts.indexOf(resetTimeout);
+                if (idx > -1) lightboxTouchResetTimeouts.splice(idx, 1);
+              }, 300);
+              lightboxTouchResetTimeouts.push(resetTimeout);
+              // Cap array size to prevent unbounded growth from rapid taps
+              if (lightboxTouchResetTimeouts.length > 20) {
+                const oldTimeout = lightboxTouchResetTimeouts.shift();
+                clearTimeout(oldTimeout);
+              }
+            },
+            { passive: false, signal }
+          );
+        });
+      };
+
+      initLightbox();
+      window.__registerAfterSwap('lightbox', initLightbox);
+    </script>
+
+    <!-- Sticky Contact Bar -->
+    <div class="sticky-contact-bar" id="sticky-contact-bar">
+      <a
+        href={`mailto:${SITE_CONFIG.email}`}
+        class="contact-item"
+        aria-label="Email me"
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path
+            d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+          ></path>
+          <polyline points="22,6 12,13 2,6"></polyline>
+        </svg>
+        <span class="contact-label">Email</span>
+      </a>
+      <a
+        href={SITE_CONFIG.linkedin}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="contact-item"
+        aria-label="LinkedIn profile"
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
+          ></path>
+        </svg>
+        <span class="contact-label">LinkedIn</span>
+      </a>
+      <a
+        href={SITE_CONFIG.github}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="contact-item"
+        aria-label="GitHub profile"
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+          ></path>
+        </svg>
+        <span class="contact-label">GitHub</span>
+      </a>
+      <a
+        href={`${import.meta.env.BASE_URL}resume/`}
+        class="contact-item contact-item-primary"
+        aria-label="View resume"
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+          ></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        <span class="contact-label">Resume</span>
+      </a>
+    </div>
+
+    <!-- Speculative prefetching - deferred to end of body for better mobile FCP -->
+    <script is:inline>
+      (function () {
+        // Guard to prevent listener stacking on View Transitions
+        if (window.__prefetchRegistered) return;
+        window.__prefetchRegistered = true;
+
+        document.addEventListener('astro:before-swap', function () {
+          if (hoverTimeout) {
+            clearTimeout(hoverTimeout);
+            hoverTimeout = null;
+          }
+        });
+
+        // Skip prefetching on slow connections (2G, slow-2g, or saveData mode)
+        var conn = navigator.connection;
+        if (
+          conn &&
+          (conn.saveData ||
+            conn.effectiveType === '2g' ||
+            conn.effectiveType === 'slow-2g')
+        ) {
+          return;
+        }
+
+        // Use global Set to persist across View Transitions (avoids duplicate prefetch requests)
+        // but also track the actual DOM elements for cleanup
+        window.__prefetchedUrls = window.__prefetchedUrls || new Set();
+        window.__prefetchLinks = window.__prefetchLinks || [];
+        var hoverTimeout = null;
+        var HOVER_DELAY_MS = 65;
+        var MAX_PREFETCH_LINKS = 20; // Limit total prefetch links to prevent DOM bloat
+
+        function prefetchUrl(url) {
+          if (window.__prefetchedUrls.has(url)) return;
+          if (url.startsWith('http') && !url.startsWith(window.location.origin))
+            return;
+          if (url.endsWith('.pdf') || url.endsWith('.zip')) return;
+
+          // Remove oldest prefetch link if we hit the limit
+          if (window.__prefetchLinks.length >= MAX_PREFETCH_LINKS) {
+            var oldLink = window.__prefetchLinks.shift();
+            if (oldLink) {
+              if (oldLink.parentNode) {
+                oldLink.parentNode.removeChild(oldLink);
+              }
+              // Also remove from URL set so it can be re-prefetched if needed
+              window.__prefetchedUrls.delete(oldLink.href);
+            }
+          }
+
+          window.__prefetchedUrls.add(url);
+          var link = document.createElement('link');
+          link.rel = 'prefetch';
+          link.href = url;
+          link.as = 'document';
+          document.head.appendChild(link);
+          window.__prefetchLinks.push(link);
+        }
+
+        function handleMouseEnter(e) {
+          var anchor = e.target.closest('a');
+          if (!anchor || !anchor.href) return;
+          hoverTimeout = setTimeout(function () {
+            prefetchUrl(anchor.href);
+          }, HOVER_DELAY_MS);
+        }
+
+        function handleMouseLeave() {
+          if (hoverTimeout) {
+            clearTimeout(hoverTimeout);
+            hoverTimeout = null;
+          }
+        }
+
+        function handleTouchStart(e) {
+          var anchor = e.target.closest('a');
+          if (anchor && anchor.href) prefetchUrl(anchor.href);
+        }
+
+        document.addEventListener('mouseover', handleMouseEnter, {
+          passive: true,
+        });
+        document.addEventListener('mouseout', handleMouseLeave, {
+          passive: true,
+        });
+        document.addEventListener('touchstart', handleTouchStart, {
+          passive: true,
+        });
+      })();
+    </script>
+  </body>
+</html>
+
+<style>
+  /* Skip link for accessibility - hidden until focused */
+  .skip-link {
+    position: fixed; /* Changed from absolute to fixed for reliable positioning */
+    top: -6.25rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(
+      --color-skip-link
+    ); /* Darker blue for WCAG AA contrast (6.5:1 with white) */
+    color: var(--color-btn-text);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-base);
+    z-index: var(--z-skip-link); /* Above lightbox and other overlays */
+    transition: top var(--transition-snap); /* Fast transition for keyboard navigation */
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  /* Premium glow effect behind skip link when focused */
+  .skip-link::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: calc(var(--radius-md) + 8px);
+    background: radial-gradient(
+      ellipse at center,
+      var(--color-accent-50) 0%,
+      var(--color-gradient-purple-30) 50%,
+      transparent 70%
+    );
+    opacity: 0;
+    filter: blur(var(--blur-2xl));
+    z-index: -1;
+    transition: opacity var(--transition-slow) cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+
+  .skip-link:focus {
+    top: calc(
+      env(safe-area-inset-top, 0px) + var(--spacing-md)
+    ); /* Account for iOS notch */
+    outline: var(--outline-width) solid var(--color-btn-text);
+    outline-offset: var(--outline-offset-sm);
+    box-shadow:
+      0 8px 25px -5px var(--color-accent-40),
+      0 0 20px var(--color-gradient-purple-20);
+  }
+
+  .skip-link:focus::before {
+    opacity: 1;
+  }
+
+  /* Mobile menu backdrop overlay */
+  .mobile-menu-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--color-overlay-black-60);
+    backdrop-filter: blur(var(--blur-sm));
+    -webkit-backdrop-filter: blur(var(--blur-sm));
+    z-index: var(--z-mobile-backdrop);
+    opacity: 0;
+    transition: opacity var(--transition-slow);
+    pointer-events: none;
+  }
+
+  .mobile-menu-backdrop.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Mobile menu panel - positioned outside header for proper stacking */
+  .mobile-menu-panel {
+    display: none;
+    position: fixed;
+    top: var(--header-total-height);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: var(--z-mobile-menu);
+    background: var(--color-bg);
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    padding-top: var(--spacing-md);
+    padding-bottom: calc(var(--spacing-xl) + env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    opacity: 0;
+    transform: translateY(calc(-1 * var(--translate-sm)));
+    transition:
+      opacity var(--transition-fast) ease,
+      transform var(--transition-fast) ease;
+    pointer-events: none;
+    /* Light divider at top */
+    border-top: 1px solid var(--color-border);
+  }
+
+  .mobile-menu-panel.open {
+    display: flex;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .mobile-menu-panel a {
+    padding: var(--spacing-md) var(--spacing-lg);
+    min-height: var(--touch-target);
+    border-radius: var(--radius-md);
+    transition:
+      background var(--transition-fast),
+      color var(--transition-fast),
+      transform var(--transition-snap);
+    width: 100%;
+    background: var(--color-bg-subtle);
+    font-size: var(--font-size-3xl);
+    /* Eliminate 300ms touch delay */
+    touch-action: manipulation;
+    font-weight: var(--font-weight-medium);
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: var(--color-text-muted);
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+    overflow: visible;
+    /* Staggered entrance animation */
+    opacity: 0;
+    transform: translateX(calc(-1 * var(--translate-md)));
+    /* Remove default Safari focus outline */
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  /* Premium glow effect behind mobile menu links */
+  .mobile-menu-panel a::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: calc(var(--radius-md) + 4px);
+    background: radial-gradient(
+      ellipse at left,
+      var(--color-accent-20) 0%,
+      var(--color-gradient-purple-10) 50%,
+      transparent 70%
+    );
+    opacity: 0;
+    filter: blur(var(--blur-xl));
+    z-index: -1;
+    transition: opacity var(--transition-slow) cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+
+  /* Staggered animation delays for mobile menu items */
+  .mobile-menu-panel.open a:nth-child(1) {
+    animation: mobileMenuSlideIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) 0.05s
+      forwards;
+  }
+  .mobile-menu-panel.open a:nth-child(2) {
+    animation: mobileMenuSlideIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) 0.1s
+      forwards;
+  }
+  .mobile-menu-panel.open a:nth-child(3) {
+    animation: mobileMenuSlideIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) 0.15s
+      forwards;
+  }
+  .mobile-menu-panel.open a:nth-child(4) {
+    animation: mobileMenuSlideIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) 0.2s
+      forwards;
+  }
+  .mobile-menu-panel.open a:nth-child(5) {
+    animation: mobileMenuSlideIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) 0.25s
+      forwards;
+  }
+  .mobile-menu-panel.open a:nth-child(6) {
+    animation: mobileMenuSlideIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) 0.3s
+      forwards;
+  }
+  .mobile-menu-panel.open a:nth-child(7) {
+    animation: mobileMenuSlideIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) 0.35s
+      forwards;
+  }
+
+  @keyframes mobileMenuSlideIn {
+    from {
+      opacity: 0;
+      transform: translateX(calc(-1 * var(--translate-md)));
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Shimmer effect on mobile menu links */
+  .mobile-menu-panel a::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--color-accent-10),
+      transparent
+    );
+    transition: left var(--transition-slower);
+  }
+
+  .mobile-menu-panel a:active::before {
+    left: 100%;
+  }
+
+  /* Hover state only for devices with hover capability */
+  @media (hover: hover) {
+    .mobile-menu-panel a:hover {
+      background: var(--color-bg-elevated);
+      color: var(--color-text);
+    }
+
+    .mobile-menu-panel a:hover::after {
+      opacity: var(--opacity-muted);
+    }
+  }
+
+  /* Active state with left accent bar and glow */
+  .mobile-menu-panel a.active,
+  .mobile-menu-panel a.active:visited {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-accent);
+    background: linear-gradient(
+      90deg,
+      var(--color-accent-10) 0%,
+      var(--color-bg-elevated) 100%
+    );
+    border-left: var(--border-accent) solid var(--color-accent);
+    padding-left: calc(var(--spacing-lg) - var(--border-accent));
+    box-shadow: inset 4px 0 12px -4px var(--color-accent-30);
+  }
+
+  .mobile-menu-panel a.active::after {
+    opacity: var(--opacity-moderate);
+  }
+
+  .mobile-menu-panel a:active:not(.active) {
+    transform: scale(var(--scale-press));
+    background: var(--color-bg-elevated);
+  }
+
+  .mobile-menu-panel a:active::after {
+    opacity: var(--opacity-soft);
+  }
+
+  /* Clean focus state without Safari outline - matches active state */
+  .mobile-menu-panel a:focus-visible {
+    outline: none;
+    background: var(--color-bg-elevated);
+    color: var(--color-text);
+    box-shadow: inset 0 0 0 2px var(--color-accent-30);
+  }
+
+  .mobile-menu-panel a:focus-visible::after {
+    opacity: var(--opacity-half);
+  }
+
+  @media (max-width: 640px) {
+    .mobile-menu-backdrop {
+      display: block;
+    }
+  }
+
+  /* Hide mobile menu panel on desktop */
+  @media (min-width: 640px) {
+    .mobile-menu-panel {
+      display: none !important;
+    }
+  }
+
+  .site-wrapper {
+    display: flex;
+    flex-direction: column;
+    /* Use dvh for iOS Safari to avoid address bar jump, fallback to vh */
+    min-height: 100vh;
+    min-height: 100dvh;
+    /* Atmospheric background with noise + radial glow */
+    background:
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E"),
+      radial-gradient(
+        ellipse 80% 50% at 50% -20%,
+        rgba(8, 145, 178, 0.07),
+        transparent
+      ),
+      radial-gradient(
+        ellipse 60% 40% at 80% 100%,
+        rgba(20, 184, 166, 0.04),
+        transparent
+      ),
+      var(--color-bg);
+    background-attachment: fixed;
+  }
+
+  @media (max-width: 640px) {
+    .site-wrapper {
+      /* Simpler background on mobile — fixed attachment causes perf issues */
+      background:
+        radial-gradient(
+          ellipse 100% 50% at 50% 0%,
+          rgba(8, 145, 178, 0.05),
+          transparent
+        ),
+        var(--color-bg);
+      background-attachment: scroll;
+    }
+  }
+
+  header {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-header);
+    border-bottom: 1px solid var(--color-border);
+    /* Solid fallback for mobile - backdrop-filter hurts scroll performance */
+    background: var(--color-header-dark);
+    transition:
+      box-shadow 0.3s ease,
+      background 0.3s ease;
+    /* iOS safe area support for notch devices */
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Gradient accent line at bottom of header */
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: var(--border-accent);
+    background: linear-gradient(
+      90deg,
+      var(--color-accent),
+      var(--color-gradient-purple)
+    );
+    opacity: var(--opacity-strong);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Header shadow when scrolled */
+  header.scrolled {
+    box-shadow: var(--shadow-md);
+  }
+
+  /* Only apply backdrop-filter on desktop where performance is better */
+  @media (min-width: 640px) {
+    @supports (backdrop-filter: blur(var(--blur-md))) or
+      (-webkit-backdrop-filter: blur(var(--blur-md))) {
+      header {
+        backdrop-filter: blur(var(--blur-md));
+        -webkit-backdrop-filter: blur(var(--blur-md));
+        background: var(--color-overlay-white-90);
+      }
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    header {
+      background: var(--color-header-dark-glass);
+    }
+    header.scrolled {
+      box-shadow: var(--shadow-lg);
+    }
+  }
+
+  @media (min-width: 640px) and (prefers-color-scheme: dark) {
+    @supports (backdrop-filter: blur(var(--blur-md))) or
+      (-webkit-backdrop-filter: blur(var(--blur-md))) {
+      header {
+        background: var(--color-header-dark-glass-blur);
+      }
+    }
+  }
+
+  [data-theme='dark'] header {
+    background: var(--color-header-dark-glass);
+  }
+
+  [data-theme='dark'] header.scrolled {
+    box-shadow: var(--shadow-lg);
+  }
+
+  nav {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    /* iOS safe area support for left/right padding */
+    padding-left: calc(var(--spacing-lg) + env(safe-area-inset-left, 0px));
+    padding-right: calc(var(--spacing-lg) + env(safe-area-inset-right, 0px));
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-md);
+    min-height: var(--header-height);
+  }
+
+  .nav-name {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    text-decoration: none;
+    transition: transform var(--transition-fast);
+    padding: 0 var(--spacing-md) 0 0;
+    height: var(--touch-target);
+    justify-content: center;
+    box-sizing: border-box;
+    position: relative;
+  }
+
+  @media (hover: hover) {
+    .nav-name:hover {
+      text-decoration: none;
+      transform: translateY(var(--lift-subtle));
+    }
+  }
+
+  .nav-name:focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: var(--border-highlight);
+    border-radius: var(--radius-sm);
+  }
+
+  .name-text {
+    font-family: var(--font-display);
+    font-weight: var(--font-weight-normal);
+    font-size: var(--font-size-3xl);
+    color: var(--color-text);
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+    transition: all var(--transition-base) cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  @media (hover: hover) {
+    .nav-name:hover .name-text {
+      background: linear-gradient(
+        135deg,
+        var(--color-text) 0%,
+        var(--color-accent) 50%,
+        var(--color-gradient-purple) 100%
+      );
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav-name:hover .name-role {
+      color: var(--color-accent);
+    }
+  }
+
+  .name-role {
+    font-size: var(--font-size-xs);
+    color: var(
+      --color-text-muted
+    ); /* Changed from subtle for better WCAG contrast */
+    font-weight: var(--font-weight-medium);
+    letter-spacing: var(--letter-spacing-normal);
+    transition: color var(--transition-base);
+  }
+
+  .nav-links {
+    display: flex;
+    gap: var(--spacing-xs);
+    align-items: center;
+    height: var(--touch-target);
+  }
+
+  .nav-links a {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-muted);
+    padding: 0 var(--spacing-md);
+    height: var(--touch-target);
+    display: flex;
+    align-items: center;
+    border-radius: var(--radius-md);
+    transition:
+      color var(--transition-fast),
+      background var(--transition-fast),
+      transform var(--transition-fast) cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative;
+    overflow: visible;
+    box-sizing: border-box;
+    line-height: var(--line-height-none);
+    letter-spacing: var(--letter-spacing-subtle);
+  }
+
+  /* Premium hover glow effect for nav links */
+  .nav-links a:not(.active):not([aria-current='page'])::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: calc(var(--radius-md) + 2px);
+    background: radial-gradient(
+      ellipse at center,
+      var(--color-accent-20) 0%,
+      var(--color-gradient-purple-10) 50%,
+      transparent 70%
+    );
+    opacity: 0;
+    filter: blur(var(--blur-sm));
+    z-index: -1;
+    transition: opacity var(--transition-slow) cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+
+  /* Slide-in gradient underline from left on hover */
+  .nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: var(--spacing-sm);
+    right: var(--spacing-sm);
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      var(--color-accent),
+      var(--color-gradient-purple)
+    );
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--transition-slow);
+    border-radius: var(--radius-xs);
+  }
+
+  @media (hover: hover) {
+    .nav-links a:hover::after {
+      transform: scaleX(1);
+    }
+
+    .nav-links a:hover {
+      color: var(--color-text);
+      background: var(--color-bg-subtle);
+      text-decoration: none;
+      transform: translateY(var(--lift-subtle));
+    }
+
+    .nav-links a:not(.active):not([aria-current='page']):hover::before {
+      opacity: var(--opacity-soft);
+    }
+  }
+
+  /* Ensure visited state doesn't override nav link colors */
+  .nav-links a:visited {
+    color: var(--color-text-muted);
+  }
+
+  /* Active state - premium visual indicator */
+  .nav-links a.active,
+  .nav-links a[aria-current='page'],
+  .nav-links a.active:visited,
+  .nav-links a[aria-current='page']:visited,
+  .nav-links a.active:hover,
+  .nav-links a[aria-current='page']:hover {
+    color: var(--color-accent);
+    background: linear-gradient(
+      135deg,
+      var(--color-accent-08) 0%,
+      var(--color-gradient-purple-5) 100%
+    );
+    font-weight: var(--font-weight-semibold);
+    position: relative;
+  }
+
+  /* Subtle glow effect behind active nav link */
+  .nav-links a.active::before,
+  .nav-links a[aria-current='page']::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: calc(var(--radius-md) + 2px);
+    background: radial-gradient(
+      ellipse at center,
+      var(--color-accent-20) 0%,
+      var(--color-gradient-purple-10) 50%,
+      transparent 70%
+    );
+    opacity: var(--opacity-muted);
+    filter: blur(var(--blur-sm));
+    z-index: -1;
+  }
+
+  .nav-links a.active::after,
+  .nav-links a[aria-current='page']::after {
+    transform: scaleX(1);
+    background: linear-gradient(
+      90deg,
+      var(--color-accent),
+      var(--color-gradient-purple)
+    );
+    height: 2px;
+    bottom: 6px;
+    animation: activeIndicatorSlideIn 0.3s cubic-bezier(0.22, 1, 0.36, 1)
+      forwards;
+  }
+
+  @keyframes activeIndicatorSlideIn {
+    from {
+      transform: scaleX(0);
+      opacity: 0;
+    }
+    to {
+      transform: scaleX(1);
+      opacity: 1;
+    }
+  }
+
+  /* Focus visible for active links */
+  .nav-links a:focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: var(--outline-offset-sm);
+    background: var(--color-bg-subtle);
+  }
+
+  .nav-links a.active:focus-visible,
+  .nav-links a[aria-current='page']:focus-visible {
+    background: var(--color-bg-elevated);
+  }
+
+  .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+  }
+
+  .mobile-menu-btn {
+    display: none;
+    background: none;
+    border: none;
+    padding: var(--spacing-xs);
+    cursor: pointer;
+    color: var(--color-text);
+    border-radius: var(--radius-md);
+    transition: background var(--transition-fast);
+    position: relative;
+    overflow: visible;
+    /* Eliminate 300ms touch delay */
+    touch-action: manipulation;
+    /* Remove Safari default focus outline */
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Premium glow effect behind mobile menu button */
+  .mobile-menu-btn::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: calc(var(--radius-md) + 4px);
+    background: radial-gradient(
+      ellipse at center,
+      var(--color-accent-30) 0%,
+      var(--color-gradient-purple-15) 50%,
+      transparent 70%
+    );
+    opacity: 0;
+    filter: blur(var(--blur-lg));
+    z-index: -1;
+    transition: opacity var(--transition-slow) cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+
+  .mobile-menu-btn svg {
+    transition: transform var(--transition-base)
+      cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @media (hover: hover) {
+    .mobile-menu-btn:hover {
+      background: var(--color-bg-subtle);
+    }
+
+    .mobile-menu-btn:hover::before {
+      opacity: var(--opacity-medium);
+    }
+
+    .mobile-menu-btn:hover svg {
+      transform: scale(1.1) rotate(-5deg);
+    }
+  }
+
+  /* Clean focus state for mobile menu button - no outline */
+  .mobile-menu-btn:focus-visible {
+    outline: none;
+    background: var(--color-bg-subtle);
+    box-shadow: inset 0 0 0 2px var(--color-accent-30);
+  }
+
+  .mobile-menu-btn:focus-visible::before {
+    opacity: var(--opacity-half);
+  }
+
+  @media (max-width: 640px) {
+    header {
+      z-index: var(--z-header);
+    }
+
+    nav {
+      flex-wrap: nowrap;
+      padding: var(--spacing-xs) var(--spacing-md);
+      /* Maintain safe area insets on mobile */
+      padding-left: calc(var(--spacing-md) + env(safe-area-inset-left, 0px));
+      padding-right: calc(var(--spacing-md) + env(safe-area-inset-right, 0px));
+      gap: var(--spacing-xs);
+    }
+
+    /* Hide desktop nav links on mobile - we use mobile-menu-panel instead */
+    .nav-links {
+      display: none !important;
+    }
+
+    .nav-name {
+      padding: var(--spacing-xs) 0;
+      min-height: var(--touch-target);
+      height: auto;
+      flex: 1;
+      overflow: visible;
+    }
+
+    /* Ensure name text displays fully without clipping */
+    .name-text {
+      font-size: var(--font-size-2xl);
+      white-space: nowrap;
+      /* Remove overflow to prevent left-side clipping */
+      overflow: visible;
+    }
+
+    .name-role {
+      font-size: var(--font-size-2xs);
+    }
+
+    .mobile-menu-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: var(--touch-target);
+      height: var(--touch-target);
+      min-width: var(--touch-target);
+      min-height: var(--touch-target);
+      padding: 0;
+      margin-right: 0;
+      /* Ensure proper hitbox alignment */
+      flex-shrink: 0;
+    }
+
+    .mobile-menu-btn svg {
+      /* Center icon within button */
+      display: block;
+    }
+
+    .nav-actions {
+      flex-shrink: 0;
+      margin-right: var(--spacing-sm);
+    }
+  }
+
+  main {
+    flex: 1;
+    /* Add top padding on mobile to prevent content crowding under sticky header */
+    padding-top: var(--spacing-md);
+    /* iOS safe area support for bottom padding - prevents Safari toolbar from covering content */
+    padding-bottom: calc(var(--spacing-lg) + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Restore normal spacing on desktop */
+  @media (min-width: 640px) {
+    main {
+      padding-top: 0;
+    }
+  }
+
+  footer {
+    border-top: none;
+    background: linear-gradient(
+      180deg,
+      var(--color-bg) 0%,
+      var(--color-bg-subtle) 100%
+    );
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Gradient accent line at top of footer */
+  footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--border-accent);
+    background: linear-gradient(
+      90deg,
+      var(--color-accent),
+      var(--color-gradient-purple)
+    );
+    z-index: 2;
+  }
+
+  /* Animated background pattern */
+  .footer-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: radial-gradient(
+      circle at 1px 1px,
+      var(--color-border) 1px,
+      transparent 0
+    );
+    background-size: 40px 40px;
+    opacity: var(--opacity-dim);
+    pointer-events: none;
+  }
+
+  .footer-content {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-md);
+    /* iOS safe area support for bottom padding */
+    padding-bottom: calc(var(--spacing-md) + env(safe-area-inset-bottom, 0px));
+    padding-left: calc(var(--spacing-lg) + env(safe-area-inset-left, 0px));
+    padding-right: calc(var(--spacing-lg) + env(safe-area-inset-right, 0px));
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Back to top prompt */
+  .back-to-top-prompt {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    margin: 0 auto var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    min-height: var(--touch-target);
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    transition: all var(--transition-slow);
+  }
+
+  @media (hover: hover) {
+    .back-to-top-prompt:hover {
+      color: var(--color-link);
+      border-color: var(--color-accent-35);
+      background: linear-gradient(
+        135deg,
+        var(--color-accent-20) 0%,
+        var(--color-gradient-purple-10) 100%
+      );
+      transform: translateY(var(--lift-sm));
+      box-shadow: 0 4px 12px var(--color-accent-20);
+    }
+  }
+
+  .back-to-top-prompt:focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: var(--outline-offset-sm);
+  }
+
+  .back-to-top-arrow {
+    animation: bounceUp var(--animation-pulse) ease-in-out infinite;
+  }
+
+  @keyframes bounceUp {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(var(--lift-md));
+    }
+  }
+
+  /* Footer branding */
+  .footer-brand {
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .footer-name {
+    font-family: var(--font-display);
+    font-size: var(--font-size-5xl);
+    font-weight: var(--font-weight-normal);
+    color: var(--color-text);
+    text-decoration: none;
+    letter-spacing: -0.01em;
+    display: block;
+    transition: color var(--transition-fast);
+  }
+
+  @media (hover: hover) {
+    .footer-name:hover {
+      color: var(--color-accent);
+      text-decoration: none;
+    }
+  }
+
+  .footer-name:visited {
+    color: var(--color-text);
+  }
+
+  .footer-tagline {
+    font-size: var(--font-size-base);
+    color: var(--color-text-muted);
+    margin: var(--spacing-xs) 0 0;
+    letter-spacing: var(--letter-spacing-subtle);
+  }
+
+  /* Footer sections */
+  .footer-sections {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-2xl);
+    margin-bottom: var(--spacing-md);
+    flex-wrap: wrap;
+  }
+
+  .footer-section {
+    text-align: center;
+  }
+
+  .footer-section-title {
+    font-size: var(
+      --font-size-xs
+    ); /* Increased from 0.7rem for better readability (12px min) */
+    font-weight: var(--font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-caps);
+    margin: 0 0 var(--spacing-sm);
+    background: linear-gradient(
+      135deg,
+      var(--color-text-muted) 0%,
+      var(--color-accent) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .footer-section-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .footer-section-links a {
+    font-size: var(--font-size-base);
+    color: var(--color-text-muted);
+    transition:
+      color var(--transition-fast),
+      transform var(--transition-fast);
+    display: block;
+    padding: var(--spacing-xs) 0;
+    min-height: var(--touch-target);
+    display: flex;
+    align-items: center;
+    position: relative;
+    letter-spacing: var(--letter-spacing-subtle);
+  }
+
+  /* Arrow indicator that slides in on hover */
+  .footer-section-links a::after {
+    content: '→';
+    position: absolute;
+    right: 0;
+    opacity: 0;
+    transform: translateX(calc(-1 * var(--translate-2sm)));
+    transition: all var(--transition-fast) cubic-bezier(0.22, 1, 0.36, 1);
+    color: var(--color-accent);
+    font-size: var(--font-size-sm);
+  }
+
+  @media (hover: hover) {
+    .footer-section-links a:hover {
+      color: var(--color-link);
+      transform: translateX(var(--translate-xs));
+      text-decoration: none;
+    }
+
+    .footer-section-links a:hover::after {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .footer-section-links a:active {
+    color: var(--color-accent);
+    transform: scale(var(--scale-press));
+  }
+
+  .footer-section-links a:focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: var(--outline-offset-sm);
+    border-radius: var(--radius-sm);
+    color: var(--color-link);
+  }
+
+  /* Social links */
+  .footer-social-links {
+    display: flex;
+    gap: var(--spacing-sm);
+    justify-content: center;
+  }
+
+  .social-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px; /* Increased from 40px for better touch targets */
+    height: 48px;
+    border-radius: var(--radius-full);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    transition: all var(--transition-slow);
+    position: relative;
+    overflow: visible;
+  }
+
+  /* Premium glow effect behind social icons */
+  .social-link::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: var(--radius-full);
+    background: radial-gradient(
+      ellipse at center,
+      var(--color-accent-35) 0%,
+      var(--color-gradient-purple-20) 50%,
+      transparent 70%
+    );
+    opacity: 0;
+    filter: blur(var(--blur-lg));
+    z-index: -1;
+    transition:
+      opacity var(--transition-slow) cubic-bezier(0.22, 1, 0.36, 1),
+      transform var(--transition-slow) cubic-bezier(0.22, 1, 0.36, 1);
+    transform: scale(0.8);
+    pointer-events: none;
+  }
+
+  .social-link svg {
+    transition: transform var(--transition-base)
+      cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @media (hover: hover) {
+    .social-link:hover {
+      transform: scale(var(--scale-hover)) translateY(var(--lift-sm));
+      color: var(--color-link);
+      border-color: var(--color-accent-35);
+      background: linear-gradient(
+        135deg,
+        var(--color-accent-20) 0%,
+        var(--color-gradient-purple-10) 100%
+      );
+      box-shadow: 0 4px 16px var(--color-accent-20);
+      text-decoration: none;
+    }
+
+    .social-link:hover::before {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .social-link:hover svg {
+      transform: rotate(-8deg) scale(1.1);
+      filter: drop-shadow(0 0 6px var(--color-accent-50));
+    }
+  }
+
+  .social-link:active {
+    transform: scale(var(--scale-shrink));
+  }
+
+  .social-link:focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: var(--outline-offset-sm);
+    transform: scale(var(--scale-subtle));
+  }
+
+  /* Reduce motion for pattern animation */
+  @media (prefers-reduced-motion: reduce) {
+    .footer-pattern {
+      animation: none;
+    }
+    .back-to-top-arrow {
+      animation: none;
+    }
+    .mobile-menu-btn::before,
+    .mobile-menu-btn svg,
+    .mobile-menu-panel a::after,
+    .skip-link::before {
+      transition: none;
+    }
+  }
+
+  /* Sticky Contact Bar */
+  .sticky-contact-bar {
+    position: fixed;
+    bottom: var(--spacing-lg);
+    right: var(--spacing-lg);
+    display: flex;
+    gap: var(--spacing-xs);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    padding: var(--spacing-xs);
+    box-shadow: var(--shadow-lg);
+    z-index: var(--z-sticky);
+    opacity: 0;
+    transform: translateY(var(--translate-md));
+    animation: slideInUp 0.4s ease-out 1s forwards;
+  }
+
+  @keyframes slideInUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .contact-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+    color: var(--color-text-muted);
+    text-decoration: none;
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    transition: all var(--transition-snap);
+    white-space: nowrap;
+  }
+
+  .contact-item:hover {
+    color: var(--color-text);
+    background: var(--color-bg-subtle);
+  }
+
+  .contact-item-primary {
+    background: linear-gradient(
+      135deg,
+      var(--color-accent) 0%,
+      var(--color-link) 100%
+    );
+    color: var(--color-btn-text);
+  }
+
+  .contact-item-primary:hover {
+    background: linear-gradient(
+      135deg,
+      var(--color-link) 0%,
+      var(--color-link-hover) 100%
+    );
+    color: var(--color-btn-text);
+  }
+
+  .contact-label {
+    display: inline;
+  }
+
+  /* Mobile: show icons only */
+  @media (max-width: 768px) {
+    .sticky-contact-bar {
+      bottom: var(--spacing-md);
+      right: var(--spacing-md);
+      left: var(--spacing-md);
+      justify-content: center;
+    }
+
+    .contact-label {
+      display: none;
+    }
+
+    .contact-item {
+      padding: var(--spacing-sm);
+      min-width: var(--touch-target);
+      min-height: var(--touch-target);
+      justify-content: center;
+    }
+  }
+
+  /* Hide on very small screens or when footer is visible */
+  @media (max-width: 400px) {
+    .sticky-contact-bar {
+      bottom: var(--spacing-sm);
+      right: var(--spacing-sm);
+      left: var(--spacing-sm);
+      padding: var(--spacing-2xs);
+    }
+  }
+
+  /* Page Loading Indicator */
+  .page-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--color-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: var(--z-loader);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.3s ease,
+      visibility 0.3s ease;
+    pointer-events: none;
+  }
+
+  .page-loader.loading {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: all;
+  }
+
+  .loader-spinner {
+    width: var(--size-8xl);
+    height: var(--size-8xl);
+    border: var(--border-accent) solid var(--color-border);
+    border-top-color: var(--color-accent);
+    border-radius: var(--radius-full);
+    animation: spin var(--animation-spin) linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Scroll to top button - consolidated floating action button */
+  .scroll-top {
+    position: fixed;
+    /* Position above the sticky contact bar (bar height ~48px + spacing) */
+    bottom: calc(var(--spacing-lg) + 60px + env(safe-area-inset-bottom, 0px));
+    right: calc(var(--spacing-lg) + env(safe-area-inset-right, 0px));
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-full);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-md);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-muted);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(var(--translate-md)) scale(var(--scale-shrink));
+    transition: all var(--transition-smooth);
+    z-index: var(--z-dropdown);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Premium glow effect behind scroll-top button */
+  .scroll-top::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: var(--radius-full);
+    background: radial-gradient(
+      ellipse at center,
+      var(--color-accent-40) 0%,
+      var(--color-gradient-purple-25) 50%,
+      transparent 70%
+    );
+    opacity: 0;
+    filter: blur(var(--blur-xl));
+    z-index: -1;
+    transition: opacity var(--transition-slow) cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+
+  @media (hover: hover) {
+    .scroll-top:hover::before {
+      opacity: 1;
+    }
+  }
+
+  .scroll-top.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+  }
+
+  .scroll-top:hover {
+    background: var(--color-link);
+    border-color: var(--color-link);
+    color: var(--color-btn-text);
+    transform: translateY(var(--lift-lg)) scale(var(--scale-hover));
+    box-shadow: var(--shadow-accent-subtle);
+  }
+
+  .scroll-top:active {
+    transform: translateY(var(--lift-sm)) scale(var(--scale-subtle));
+  }
+
+  .scroll-top:focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: var(--outline-offset-sm);
+    background: var(--color-link);
+    border-color: var(--color-link);
+    color: var(--color-btn-text);
+  }
+
+  .scroll-top svg {
+    transition: transform var(--transition-slow);
+  }
+
+  .scroll-top:hover svg {
+    transform: translateY(var(--lift-sm));
+  }
+
+  @media (max-width: 640px) {
+    .scroll-top {
+      /* Position above the sticky contact bar on mobile (bar height ~48px + spacing) */
+      bottom: calc(var(--spacing-md) + 60px + env(safe-area-inset-bottom, 0px));
+      right: calc(var(--spacing-md) + env(safe-area-inset-right, 0px));
+      width: var(--touch-target);
+      height: var(--touch-target);
+    }
+
+    .footer-content {
+      /* Add safe area padding for iOS devices */
+      padding: var(--spacing-md) var(--spacing-md)
+        calc(var(--spacing-sm) + env(safe-area-inset-bottom, 0px));
+    }
+
+    .footer-sections {
+      gap: var(--spacing-lg);
+    }
+
+    .footer-sections {
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+
+  /* Reduce motion */
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-top {
+      transition:
+        opacity 0.1s ease,
+        visibility 0.1s ease;
+    }
+
+    .scroll-top.visible {
+      animation: none;
+      transform: none;
+    }
+
+    .scroll-top:hover,
+    .scroll-top:active {
+      transform: none;
+    }
+
+    .scroll-top svg {
+      transition: none;
+    }
+
+    .scroll-top:hover svg {
+      transform: none;
+    }
+  }
+
+  /* ============================
+   * View Transitions Animations
+   * ============================ */
+
+  /* Default transition for all elements - snappy but visible */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 150ms;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Main content fade transition - smooth slide */
+  ::view-transition-old(main-content) {
+    animation: fade-out-slide-left 150ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  ::view-transition-new(main-content) {
+    animation: fade-in-slide-right 150ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  /* Header stays fixed during transition */
+  ::view-transition-old(header),
+  ::view-transition-new(header) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+
+  /* Footer stays fixed during transition */
+  ::view-transition-old(footer),
+  ::view-transition-new(footer) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+
+  /* Keyframe animations for main content - noticeable but smooth */
+  @keyframes fade-out-slide-left {
+    from {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateX(calc(-1 * var(--translate-4sm)));
+    }
+  }
+
+  @keyframes fade-in-slide-right {
+    from {
+      opacity: 0;
+      transform: translateX(var(--translate-4sm));
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(root),
+    ::view-transition-new(root),
+    ::view-transition-old(main-content),
+    ::view-transition-new(main-content) {
+      animation-duration: 0ms;
+    }
+  }
+
+  /* Faster, simpler transitions on mobile for snappier navigation */
+  @media (max-width: 768px) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+      animation-duration: 80ms;
+    }
+
+    ::view-transition-old(main-content) {
+      animation: fade-out-mobile 80ms ease-out forwards;
+    }
+
+    ::view-transition-new(main-content) {
+      animation: fade-in-mobile 80ms ease-out forwards;
+    }
+  }
+
+  /* Simpler mobile animations - just fade, no slide */
+  @keyframes fade-out-mobile {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes fade-in-mobile {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Loading state during page transitions */
+  body.page-transitioning {
+    cursor: progress;
+  }
+
+  /* Prevent content flash during transition */
+  ::view-transition-group(main-content) {
+    overflow: hidden;
+  }
+
+  /* Smooth transition for theme changes during navigation */
+  ::view-transition-image-pair(root) {
+    isolation: auto;
+  }
+
+  /* ============================
+   * Scroll-Triggered Animations
+   * ============================ */
+  .animate-on-scroll {
+    opacity: 0;
+    transform: translateY(var(--translate-md));
+    transition:
+      opacity var(--animation-fade-in-slow) ease,
+      transform var(--animation-fade-in-slow) ease;
+  }
+
+  .animate-on-scroll.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Respect reduced motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-on-scroll {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+  }
+</style>

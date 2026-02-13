@@ -1,0 +1,504 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const base = import.meta.env.BASE_URL;
+---
+
+<BaseLayout title="Offline" noindex={true}>
+  <div class="offline-page">
+    <div class="header-accent"></div>
+    <div class="offline-icon" aria-hidden="true">
+      <svg
+        width="80"
+        height="80"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <line x1="1" y1="1" x2="23" y2="23"></line>
+        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
+        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
+        <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
+        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
+        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+        <line x1="12" y1="20" x2="12.01" y2="20"></line>
+      </svg>
+    </div>
+
+    <h1>You're Offline</h1>
+    <p class="message">
+      It looks like you've lost your internet connection. Some pages you've
+      visited before may still be available.
+    </p>
+
+    <div class="actions">
+      <button
+        type="button"
+        class="retry-btn"
+        id="retry-btn"
+        aria-label="Retry loading the page"
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+        </svg>
+        Try Again
+      </button>
+
+      <a href={base} class="home-link" aria-label="Go to homepage">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        Go Home
+      </a>
+    </div>
+
+    <div class="cached-pages">
+      <h2>Available Offline</h2>
+      <p>These pages may be available from your cache:</p>
+      <ul>
+        <li><a href={base}>Home</a></li>
+        <li><a href={`${base}resume/`}>Resume</a></li>
+        <li><a href={`${base}writing/`}>Writing</a></li>
+        <li><a href={`${base}case-studies/`}>Case Studies</a></li>
+      </ul>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .offline-page {
+    position: relative;
+    text-align: center;
+    padding: var(--spacing-2xl) var(--spacing-md);
+    padding-top: var(--spacing-3xl);
+    max-width: 500px;
+    margin: 0 auto;
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .header-accent {
+    position: absolute;
+    top: var(--spacing-lg);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: var(--border-highlight);
+    background: linear-gradient(
+      90deg,
+      var(--color-accent),
+      var(--color-gradient-purple)
+    );
+    border-radius: var(--radius-full);
+    opacity: var(--opacity-strong);
+  }
+
+  .offline-icon {
+    position: relative;
+    color: var(--color-text-muted);
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .offline-icon::before {
+    content: '';
+    position: absolute;
+    inset: -20px;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle at center,
+      var(--color-accent-15) 0%,
+      var(--color-gradient-purple-10) 40%,
+      transparent 70%
+    );
+    filter: blur(var(--blur-2xl));
+    opacity: var(--opacity-half);
+  }
+
+  .offline-icon svg {
+    position: relative;
+    z-index: 1;
+  }
+
+  h1 {
+    font-size: var(--font-size-8xl);
+    margin: 0 0 var(--spacing-md) 0;
+  }
+
+  .message {
+    color: var(--color-text-muted);
+    line-height: var(--line-height-relaxed);
+    letter-spacing: var(--letter-spacing-slight);
+    margin-bottom: var(--spacing-xl);
+  }
+
+  .actions {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: var(--spacing-2xl);
+  }
+
+  .retry-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    min-height: var(--touch-target);
+    background: var(--color-accent);
+    color: var(--color-btn-text);
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--letter-spacing-subtle);
+    cursor: pointer;
+    transition: all var(--transition-base) cubic-bezier(0.22, 1, 0.36, 1);
+    overflow: hidden;
+  }
+
+  .retry-btn::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: calc(var(--radius-md) + 4px);
+    background: radial-gradient(
+      ellipse at center,
+      var(--color-accent-50) 0%,
+      var(--color-gradient-purple-30) 50%,
+      transparent 70%
+    );
+    opacity: 0;
+    filter: blur(var(--blur-xl));
+    z-index: -1;
+    transition: opacity var(--transition-slow) cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .retry-btn svg {
+    transition: transform var(--transition-slowest)
+      cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .retry-btn:focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: var(--outline-offset-sm);
+  }
+
+  @media (hover: hover) {
+    .retry-btn:hover {
+      background: var(--color-link-hover);
+      transform: translateY(var(--lift-sm));
+    }
+
+    .retry-btn:hover::before {
+      opacity: 1;
+    }
+
+    .retry-btn:hover svg {
+      transform: rotate(180deg);
+    }
+  }
+
+  .home-link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    min-height: var(--touch-target);
+    background: var(--color-bg-subtle);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-weight: var(--font-weight-medium);
+    letter-spacing: var(--letter-spacing-subtle);
+    text-decoration: none;
+    transition: all var(--transition-base) cubic-bezier(0.22, 1, 0.36, 1);
+    overflow: hidden;
+  }
+
+  .home-link::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: calc(var(--radius-md) + 4px);
+    background: radial-gradient(
+      ellipse at center,
+      var(--color-accent-25) 0%,
+      var(--color-gradient-purple-15) 50%,
+      transparent 70%
+    );
+    opacity: 0;
+    filter: blur(var(--blur-lg));
+    z-index: -1;
+    transition: opacity var(--transition-slow) cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .home-link svg {
+    transition: transform var(--transition-bounce);
+  }
+
+  .home-link:focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: var(--outline-offset-sm);
+  }
+
+  @media (hover: hover) {
+    .home-link:hover {
+      border-color: var(--color-link);
+      color: var(--color-link);
+      text-decoration: none;
+      transform: translateY(var(--lift-sm));
+    }
+
+    .home-link:hover::before {
+      opacity: 1;
+    }
+
+    .home-link:hover svg {
+      transform: scale(1.1);
+    }
+  }
+
+  .cached-pages {
+    position: relative;
+    padding: var(--spacing-lg);
+    background: var(--color-bg-subtle);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .cached-pages h2 {
+    position: relative;
+    font-size: var(--font-size-base);
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-wider);
+    color: var(--color-text-muted);
+    margin: 0 0 var(--spacing-sm) 0;
+  }
+
+  .cached-pages p {
+    position: relative;
+    font-size: var(--font-size-base);
+    color: var(--color-text-subtle);
+    letter-spacing: var(--letter-spacing-slight);
+    margin: 0 0 var(--spacing-md) 0;
+  }
+
+  .cached-pages ul {
+    position: relative;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    justify-content: center;
+  }
+
+  .cached-pages li {
+    animation: cachedLinkFadeIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+
+  .cached-pages li:nth-child(1) {
+    animation-delay: 0.1s;
+  }
+  .cached-pages li:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+  .cached-pages li:nth-child(3) {
+    animation-delay: 0.2s;
+  }
+  .cached-pages li:nth-child(4) {
+    animation-delay: 0.25s;
+  }
+  .cached-pages li:nth-child(5) {
+    animation-delay: 0.3s;
+  }
+
+  @keyframes cachedLinkFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(var(--translate-2sm));
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .cached-pages li a {
+    position: relative;
+    padding: var(--spacing-xs) var(--spacing-md);
+    min-height: var(--touch-target);
+    display: inline-flex;
+    align-items: center;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    letter-spacing: var(--letter-spacing-subtle);
+    text-decoration: none;
+    transition: all var(--transition-base) cubic-bezier(0.22, 1, 0.36, 1);
+    overflow: hidden;
+  }
+
+  .cached-pages li a::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--color-accent-15),
+      transparent
+    );
+    transition: left var(--transition-slowest) cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .cached-pages li a:focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: var(--outline-offset-sm);
+  }
+
+  @media (hover: hover) {
+    .cached-pages li a:hover {
+      border-color: var(--color-link);
+      color: var(--color-link);
+      transform: translateY(var(--lift-sm));
+    }
+
+    .cached-pages li a:hover::before {
+      left: 100%;
+    }
+  }
+
+  /* Mobile adjustments */
+  @media (max-width: 640px) {
+    h1 {
+      font-size: var(--font-size-6xl);
+    }
+
+    .actions {
+      width: 100%;
+    }
+
+    .retry-btn,
+    .home-link {
+      flex: 1;
+      justify-content: center;
+    }
+  }
+
+  /* Extra small screens (iPhone SE 375px) */
+  @media (max-width: 400px) {
+    h1 {
+      font-size: var(--font-size-4xl);
+    }
+
+    .offline-icon svg {
+      width: 60px;
+      height: 60px;
+    }
+
+    .message {
+      font-size: var(--font-size-sm);
+    }
+
+    .cached-pages {
+      padding: var(--spacing-md);
+    }
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .retry-btn,
+    .home-link,
+    .cached-pages li a {
+      transition: none;
+    }
+
+    .cached-pages li {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    // Guard to prevent listener stacking on View Transitions
+    if (window.__offlineRetryListenerRegistered) return;
+    window.__offlineRetryListenerRegistered = true;
+
+    var isRetrying = false;
+    var currentRetryBtn = null;
+
+    function handleRetryClick() {
+      // Debounce: prevent multiple rapid clicks
+      if (isRetrying) return;
+      isRetrying = true;
+
+      try {
+        window.location.reload();
+      } catch {
+        // Fallback: force navigation to current page
+        window.location.replace(window.location.href);
+      }
+    }
+
+    function cleanup() {
+      if (currentRetryBtn) {
+        currentRetryBtn.removeEventListener('click', handleRetryClick);
+        currentRetryBtn = null;
+      }
+    }
+
+    function init() {
+      cleanup(); // Remove previous listener first
+      var retryBtn = document.getElementById('retry-btn');
+      if (retryBtn) {
+        currentRetryBtn = retryBtn;
+        retryBtn.addEventListener('click', handleRetryClick);
+      }
+    }
+
+    init();
+    document.addEventListener('astro:before-swap', cleanup);
+    document.addEventListener('astro:after-swap', function () {
+      isRetrying = false;
+      init();
+    });
+  })();
+</script>

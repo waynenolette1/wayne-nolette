@@ -1,0 +1,83 @@
+{
+  "name": "wayne-nolette-portfolio",
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro check --minimumSeverity warning && astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "check": "astro check --minimumSeverity warning",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "clean": "rm -rf dist .astro",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "new:post": "node scripts/new-post.mjs",
+    "new:case-study": "node scripts/new-case-study.mjs",
+    "resume:pdf": "bash scripts/generate-resume-pdf.sh",
+    "prepare": "husky",
+    "lighthouse": "lhci autorun",
+    "lighthouse:ci": "npm run build && lhci autorun",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
+    "e2e:headed": "playwright test --headed",
+    "e2e:debug": "playwright test --debug",
+    "e2e:report": "playwright show-report",
+    "e2e:update-snapshots": "playwright test --update-snapshots",
+    "audit:screenshots": "node scripts/audit-screenshots.mjs",
+    "audit:before": "AUDIT_LABEL=before node scripts/audit-screenshots.mjs --pages-only",
+    "audit:after": "AUDIT_LABEL=after node scripts/audit-screenshots.mjs --pages-only",
+    "analyze": "npm run build && node scripts/analyze-bundle.mjs",
+    "images:optimize": "node scripts/optimize-images.mjs",
+    "critical-css": "node scripts/extract-critical-css.mjs",
+    "build:optimized": "npm run build && npm run critical-css"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "^4.3.13",
+    "@astrojs/rss": "^4.0.15",
+    "@astrojs/sitemap": "^3.7.0",
+    "astro": "^5.17.1",
+    "fuse.js": "^7.1.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.6",
+    "@eslint/js": "^9.39.2",
+    "@lhci/cli": "^0.15.1",
+    "@playwright/test": "^1.58.1",
+    "@typescript-eslint/eslint-plugin": "^8.54.0",
+    "@typescript-eslint/parser": "^8.54.0",
+    "@vitest/coverage-v8": "^4.0.18",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-astro": "^1.5.0",
+    "gray-matter": "^4.0.3",
+    "husky": "^9.1.7",
+    "jsdom": "^28.0.0",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.8.1",
+    "prettier-plugin-astro": "^0.14.1",
+    "serve": "^14.2.5",
+    "sharp": "^0.34.5",
+    "typescript": "^5.9.3",
+    "unist-util-visit": "^5.1.0",
+    "vitest": "^4.0.18"
+  },
+  "lint-staged": {
+    "*.{js,ts,astro}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{css,md,json}": [
+      "prettier --write"
+    ]
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=9.0.0"
+  }
+}

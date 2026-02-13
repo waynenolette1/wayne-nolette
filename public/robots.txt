@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /wayne-nolette/
+Disallow: /
+
+Sitemap: https://wayne-nolette.github.io/wayne-nolette/sitemap-index.xml

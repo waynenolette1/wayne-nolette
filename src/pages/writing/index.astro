@@ -1,0 +1,1317 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ContactCTA from '../../components/ContactCTA.astro';
+import { getCollection } from 'astro:content';
+import {
+  sortByDateDesc,
+  groupByYear,
+  getSortedYears,
+} from '../../utils/collections';
+import { calculateReadingTime } from '../../utils/reading-time';
+
+const allPosts = await getCollection('writing', ({ data }) => !data.draft);
+const sortedPosts = sortByDateDesc(allPosts);
+
+const adrs = await getCollection('adrs');
+const sortedADRs = sortByDateDesc(adrs);
+
+// Group posts by year
+const postsByYear = groupByYear(sortedPosts);
+const years = getSortedYears(postsByYear);
+
+// Stats
+const totalPosts = allPosts.length;
+const totalADRs = adrs.length;
+
+// Featured posts - determined by frontmatter
+const featuredPosts = allPosts
+  .filter((p) => p.data.featured === true)
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 2);
+
+// Get all unique tags with their frequencies, sorted by frequency
+const tagCounts = allPosts.reduce(
+  (acc, post) => {
+    (post.data.tags || []).forEach((tag) => {
+      acc[tag] = (acc[tag] || 0) + 1;
+    });
+    return acc;
+  },
+  {} as Record<string, number>
+);
+
+const allTags = Object.entries(tagCounts)
+  .sort((a, b) => b[1] - a[1]) // Sort by frequency descending
+  .map(([tag]) => tag);
+---
+
+<BaseLayout
+  title="Writing"
+  description="Technical writing on distributed systems, data infrastructure, and AI/ML systems."
+>
+  <div class="page-header">
+    <h1 class="page-title">Writing</h1>
+    <p class="page-subtitle">
+      Technical writeups from building production systems. Each post documents
+      real work with concrete tradeoffs, metrics, and architectural decisions.
+      <em>{totalPosts} articles</em> and <em>{totalADRs} ADRs</em>.
+    </p>
+  </div>
+
+  <!-- Topic Filter Pills -->
+  <div class="filter-section">
+    <div class="filter-group">
+      <span class="filter-label" id="topic-filter-label">Topic</span>
+      <div
+        class="filter-pills"
+        id="topic-filters"
+        role="group"
+        aria-labelledby="topic-filter-label"
+      >
+        <button
+          type="button"
+          class="filter-pill active"
+          data-tag="all"
+          aria-pressed="true">All</button
+        >
+        {
+          allTags.slice(0, 12).map((tag) => (
+            <button
+              type="button"
+              class="filter-pill"
+              data-tag={tag}
+              aria-pressed="false"
+            >
+              {tag} <span class="pill-count">({tagCounts[tag]})</span>
+            </button>
+          ))
+        }
+        {
+          allTags.length > 12 &&
+            allTags.slice(12).map((tag) => (
+              <button
+                type="button"
+                class="filter-pill hidden-tag"
+                data-tag={tag}
+                aria-pressed="false"
+              >
+                {tag} <span class="pill-count">({tagCounts[tag]})</span>
+              </button>
+            ))
+        }
+        {
+          allTags.length > 12 && (
+            <button
+              type="button"
+              class="filter-pill more-pill"
+              id="more-tags-btn"
+              aria-expanded="false"
+              aria-label="Show more topic filters"
+            >
+              +{allTags.length - 12} more
+            </button>
+          )
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Featured section -->
+  {
+    featuredPosts.length > 0 && (
+      <section class="featured-section" id="featured-section">
+        <h2 class="section-title">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+          </svg>
+          Featured
+        </h2>
+        <div class="featured-grid">
+          {featuredPosts.map((post, index) => (
+            <article
+              class={`featured-card featured-card-${index}`}
+              style={`--delay: ${index * 0.1}s`}
+            >
+              <div class="featured-gradient" />
+              <a href={`${import.meta.env.BASE_URL}writing/${post.id}/`}>
+                <div class="featured-content">
+                  <div class="featured-meta">
+                    <time datetime={post.data.pubDate.toISOString()}>
+                      {post.data.pubDate.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })}
+                    </time>
+                    {post.body && (
+                      <span class="reading-time">
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          aria-hidden="true"
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <polyline points="12 6 12 12 16 14" />
+                        </svg>
+                        {calculateReadingTime(post.body)} min read
+                      </span>
+                    )}
+                  </div>
+                  <h3>{post.data.title}</h3>
+                  <p>{post.data.description}</p>
+                  {post.data.tags && post.data.tags.length > 0 && (
+                    <div class="featured-tags">
+                      {post.data.tags.slice(0, 3).map((tag: string) => (
+                        <span class="tag-chip">{tag}</span>
+                      ))}
+                    </div>
+                  )}
+                  <span class="read-link">
+                    Read article
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      aria-hidden="true"
+                    >
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  </span>
+                </div>
+              </a>
+            </article>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  {
+    years.length > 0 ? (
+      years.map((year) => (
+        <section class="year-section" data-year={year}>
+          <h2>
+            <span class="year-badge">{year}</span>
+            <span class="year-count">
+              {postsByYear[year].length}{' '}
+              {postsByYear[year].length === 1 ? 'article' : 'articles'}
+            </span>
+          </h2>
+          <ul class="post-list">
+            {postsByYear[year].map((post, index) => (
+              <li
+                class="post-item"
+                style={`--item-delay: ${index * 0.05}s`}
+                data-tags={post.data.tags?.join(',') || ''}
+              >
+                <a
+                  href={`${import.meta.env.BASE_URL}writing/${post.id}/`}
+                  class="post-link"
+                >
+                  <div class="post-main">
+                    <span class="post-title">{post.data.title}</span>
+                    <p class="post-description">{post.data.description}</p>
+                    {post.data.tags && post.data.tags.length > 0 && (
+                      <div class="post-tags">
+                        {post.data.tags.slice(0, 2).map((tag: string) => (
+                          <span class="post-tag">{tag}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div class="post-meta">
+                    {post.body && (
+                      <span class="post-reading-time">
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          aria-hidden="true"
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <polyline points="12 6 12 12 16 14" />
+                        </svg>
+                        {calculateReadingTime(post.body)} min
+                      </span>
+                    )}
+                    <time datetime={post.data.pubDate.toISOString()}>
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        aria-hidden="true"
+                      >
+                        <rect
+                          x="3"
+                          y="4"
+                          width="18"
+                          height="18"
+                          rx="2"
+                          ry="2"
+                        />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                      </svg>
+                      {post.data.pubDate.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </time>
+                  </div>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    ) : (
+      <p class="empty">No posts yet.</p>
+    )
+  }
+
+  {
+    sortedADRs.length > 0 && (
+      <section class="adr-section">
+        <h2>Architecture Decision Records</h2>
+        <p class="adr-intro">
+          Documented decisions on significant technical choices, including
+          context, alternatives considered, and rationale.
+        </p>
+        <ul class="post-list">
+          {sortedADRs.map((adr) => (
+            <li class="post-item">
+              <a
+                href={`${import.meta.env.BASE_URL}adrs/${adr.id}/`}
+                class="post-link"
+              >
+                <div class="post-main">
+                  <span class="post-title">{adr.data.title}</span>
+                </div>
+                <span
+                  class={`status badge badge-${adr.data.status === 'accepted' ? 'success' : 'warning'}`}
+                >
+                  {adr.data.status}
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+
+  <ContactCTA
+    heading="Questions about these topics?"
+    text="I write about what I build. Ask me about the details."
+  />
+</BaseLayout>
+
+<script>
+  // Guard and cleanup variables
+  let writingListenerRegistered = false;
+  let filterClickHandler: ((e: Event) => void) | null = null;
+  let pendingTimeouts: ReturnType<typeof setTimeout>[] = [];
+
+  // Filter functionality
+  let currentTag = 'all';
+
+  function applyFilters() {
+    // Clear pending timeouts from previous filter to prevent stale callbacks
+    pendingTimeouts.forEach((id) => clearTimeout(id));
+    pendingTimeouts = [];
+
+    const yearSections =
+      document.querySelectorAll<HTMLElement>('.year-section');
+    const featuredSection =
+      document.querySelector<HTMLElement>('#featured-section');
+
+    // Hide featured section when a topic filter is selected
+    if (featuredSection) {
+      if (currentTag === 'all') {
+        featuredSection.style.display = '';
+        featuredSection.style.opacity = '1';
+        featuredSection.style.transform = 'translateY(0)';
+      } else {
+        featuredSection.style.opacity = '0';
+        featuredSection.style.transform =
+          'translateY(calc(-1 * var(--translate-sm)))';
+        pendingTimeouts.push(
+          setTimeout(() => {
+            featuredSection.style.display = 'none';
+          }, 200)
+        );
+      }
+    }
+
+    // Filter posts by tag
+    yearSections.forEach((section) => {
+      const posts = section.querySelectorAll<HTMLElement>('.post-item');
+      let visiblePostCount = 0;
+
+      posts.forEach((post) => {
+        const postTags =
+          post
+            .getAttribute('data-tags')
+            ?.split(',')
+            .map((t) => t.trim())
+            .filter(Boolean) || [];
+        const tagMatches =
+          currentTag === 'all' || postTags.includes(currentTag);
+
+        if (tagMatches) {
+          post.style.opacity = '0';
+          post.style.transform = 'translateY(var(--translate-sm))';
+          post.style.display = '';
+          pendingTimeouts.push(
+            setTimeout(() => {
+              post.style.opacity = '1';
+              post.style.transform = 'translateY(0)';
+            }, 50)
+          );
+          visiblePostCount++;
+        } else {
+          post.style.opacity = '0';
+          post.style.transform = 'translateY(calc(-1 * var(--translate-sm)))';
+          pendingTimeouts.push(
+            setTimeout(() => {
+              post.style.display = 'none';
+            }, 200)
+          );
+        }
+      });
+
+      // Show/hide year section if no visible posts
+      if (visiblePostCount > 0) {
+        section.style.display = '';
+        pendingTimeouts.push(
+          setTimeout(() => {
+            section.style.opacity = '1';
+            section.style.transform = 'translateY(0)';
+          }, 50)
+        );
+      } else {
+        section.style.opacity = '0';
+        section.style.transform = 'translateY(calc(-1 * var(--translate-sm)))';
+        pendingTimeouts.push(
+          setTimeout(() => {
+            section.style.display = 'none';
+          }, 200)
+        );
+      }
+    });
+  }
+
+  function cleanup() {
+    // Clear pending timeouts to prevent callbacks on unmounted elements
+    pendingTimeouts.forEach((id) => clearTimeout(id));
+    pendingTimeouts = [];
+
+    const topicFilters = document.getElementById('topic-filters');
+    if (topicFilters && filterClickHandler) {
+      topicFilters.removeEventListener('click', filterClickHandler);
+      filterClickHandler = null;
+    }
+  }
+
+  function initFilters() {
+    // Clean up previous listener
+    cleanup();
+
+    const topicFilters = document.getElementById('topic-filters');
+    if (topicFilters) {
+      filterClickHandler = (e: Event) => {
+        // Guard against null e.target
+        if (!e.target) return;
+        const target = e.target as HTMLElement;
+
+        // Handle More button clicks
+        if (target.id === 'more-tags-btn') {
+          const hiddenTags = topicFilters.querySelectorAll(
+            '.filter-pill.hidden-tag'
+          );
+          const isExpanded = target.classList.contains('expanded');
+
+          hiddenTags.forEach((tag) => {
+            if (isExpanded) {
+              (tag as HTMLElement).style.display = 'none';
+            } else {
+              (tag as HTMLElement).style.display = 'inline-block';
+            }
+          });
+
+          if (isExpanded) {
+            target.classList.remove('expanded');
+            target.textContent = `+${hiddenTags.length} more`;
+            target.setAttribute('aria-expanded', 'false');
+          } else {
+            target.classList.add('expanded');
+            target.textContent = 'Show less';
+            target.setAttribute('aria-expanded', 'true');
+          }
+          return;
+        }
+
+        // Handle topic filter clicks
+        if (target.classList.contains('filter-pill') && target.dataset.tag) {
+          topicFilters.querySelectorAll('.filter-pill').forEach((pill) => {
+            pill.classList.remove('active');
+            pill.setAttribute('aria-pressed', 'false');
+          });
+          target.classList.add('active');
+          target.setAttribute('aria-pressed', 'true');
+
+          currentTag = target.dataset.tag;
+          applyFilters();
+        }
+      };
+      topicFilters.addEventListener('click', filterClickHandler);
+    }
+  }
+
+  function init() {
+    currentTag = 'all';
+    initFilters();
+  }
+
+  // Initialize on page load
+  init();
+
+  // Re-initialize after View Transitions (with guard to prevent listener stacking)
+  if (!writingListenerRegistered) {
+    writingListenerRegistered = true;
+    document.addEventListener('astro:after-swap', init);
+    document.addEventListener('astro:before-swap', cleanup);
+  }
+</script>
+
+<style>
+  .page-header {
+    position: relative;
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+    padding-bottom: var(--spacing-lg);
+    padding-top: var(--spacing-lg);
+    border-bottom: 1px solid var(--color-border-subtle);
+  }
+
+  .page-title {
+    font-family: var(--font-display);
+    font-size: var(--font-size-9xl);
+    font-weight: var(--font-weight-normal);
+    letter-spacing: -0.02em;
+    margin-bottom: var(--spacing-md);
+    background: linear-gradient(
+      135deg,
+      var(--color-text) 0%,
+      var(--color-text-muted) 50%,
+      var(--color-accent) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .page-subtitle {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-3xl);
+    line-height: var(--line-height-prose);
+    letter-spacing: var(--letter-spacing-snug);
+    max-width: 60ch;
+    margin: 0 auto;
+  }
+
+  .page-subtitle em {
+    font-style: italic;
+    color: var(--color-link);
+  }
+
+  /* Filter Section */
+  .filter-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-lg);
+    background: linear-gradient(
+      135deg,
+      var(--color-overlay-white-02) 0%,
+      var(--color-overlay-white-02) 100%
+    );
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-lg);
+  }
+
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+  }
+
+  .filter-label {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-wider);
+    min-width: var(--size-8xl);
+  }
+
+  .filter-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    max-width: 100%;
+  }
+
+  .filter-pill {
+    /* Reset button defaults */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    /* Remove Safari default focus outline */
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+
+    /* Styling */
+    padding: var(--spacing-sm) var(--spacing-md);
+    min-height: var(--touch-target);
+    min-width: var(--touch-target);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-muted);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: all var(--transition-base) cubic-bezier(0.22, 1, 0.36, 1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+  }
+
+  @media (hover: hover) {
+    .filter-pill:hover {
+      border-color: var(--color-accent-35);
+      color: var(--color-link);
+      background: var(--color-accent-5);
+    }
+  }
+
+  /* Click feedback animation */
+  .filter-pill:active {
+    transform: scale(0.95);
+  }
+
+  .filter-pill.active {
+    background: var(--color-accent-15);
+    border-color: var(--color-accent-40);
+    color: var(--color-link-hover);
+    font-weight: var(--font-weight-semibold);
+    box-shadow: 0 0 12px var(--color-accent-20);
+  }
+
+  /* Clean focus state without Safari outline */
+  .filter-pill:focus-visible {
+    outline: none;
+    box-shadow:
+      inset 0 0 0 2px var(--color-accent-40),
+      0 0 0 3px var(--color-bg),
+      0 0 0 5px var(--color-accent-30);
+  }
+
+  .pill-count {
+    font-size: var(--font-size-2xs);
+    color: var(--color-text-subtle);
+    font-weight: var(--font-weight-normal);
+  }
+
+  .filter-pill.active .pill-count {
+    color: var(--color-link);
+  }
+
+  .more-pill {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-link);
+  }
+
+  .filter-pill.hidden-tag {
+    display: none;
+  }
+
+  /* Featured section */
+  .featured-section {
+    margin-bottom: var(--spacing-2xl);
+    transition:
+      opacity var(--transition-slow),
+      transform var(--transition-slow);
+  }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-wider);
+    margin: 0 0 var(--spacing-lg) 0;
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--color-border-subtle);
+  }
+
+  .section-title svg {
+    color: var(--color-link);
+  }
+
+  .featured-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--spacing-lg);
+  }
+
+  .featured-card {
+    position: relative;
+    background: linear-gradient(
+      135deg,
+      var(--color-accent-08) 0%,
+      var(--color-gradient-purple-06) 50%,
+      var(--card-bg) 100%
+    );
+    backdrop-filter: blur(var(--card-backdrop-blur));
+    -webkit-backdrop-filter: blur(var(--card-backdrop-blur));
+    border: 1px solid var(--color-accent-20);
+    border-radius: var(--radius-lg);
+    overflow: visible;
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    animation: fadeInUp var(--animation-fade-in) ease-out both;
+    animation-delay: var(--delay, 0s);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+      0 4px 24px var(--color-accent-08);
+  }
+
+  .featured-gradient {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--border-highlight);
+    background: linear-gradient(
+      90deg,
+      var(--color-accent),
+      var(--color-gradient-purple)
+    );
+    opacity: var(--opacity-medium);
+  }
+
+  @media (hover: hover) {
+    .featured-card:hover {
+      border-color: rgba(255, 255, 255, 0.1);
+      box-shadow: var(--card-shadow-hover), var(--card-glow-accent);
+      transform: translateY(var(--lift-md));
+    }
+  }
+
+  .featured-card:focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .featured-card {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .featured-card a {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+
+  .featured-content {
+    padding: var(--spacing-xl);
+    padding-top: calc(var(--spacing-xl) + var(--border-highlight));
+  }
+
+  .featured-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+  }
+
+  .featured-meta time {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-subtle);
+    font-weight: var(--font-weight-medium);
+  }
+
+  .reading-time {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-subtle);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: var(--color-bg-subtle);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-base);
+    letter-spacing: var(--letter-spacing-subtle);
+  }
+
+  @media (hover: hover) {
+    .featured-card:hover .reading-time {
+      color: var(--color-link);
+    }
+  }
+
+  .featured-card h3 {
+    margin: 0 0 var(--spacing-sm);
+    font-size: var(--font-size-7xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text);
+    line-height: var(--line-height-snug);
+    transition: color var(--transition-fast);
+  }
+
+  @media (hover: hover) {
+    .featured-card:hover h3 {
+      color: var(--color-link);
+    }
+  }
+
+  .featured-card p {
+    margin: 0 0 var(--spacing-md);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    line-height: var(--line-height-prose);
+    letter-spacing: var(--letter-spacing-slight);
+  }
+
+  .featured-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+  }
+
+  .tag-chip {
+    font-size: var(--font-size-2xs);
+    font-weight: var(--font-weight-semibold);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: linear-gradient(
+      135deg,
+      var(--color-accent-10) 0%,
+      var(--color-gradient-purple-10) 100%
+    );
+    border: 1px solid var(--color-accent-20);
+    border-radius: var(--radius-full);
+    color: var(--color-link);
+    text-transform: lowercase;
+  }
+
+  .read-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-link);
+    letter-spacing: var(--letter-spacing-subtle);
+  }
+
+  /* Year sections */
+  .year-section {
+    margin-bottom: var(--spacing-2xl);
+  }
+
+  .year-section h2 {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    font-size: var(--font-size-xl);
+    margin-top: 0;
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: none;
+    position: relative;
+  }
+
+  /* Gradient accent line under year heading */
+  .year-section h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      var(--color-accent) 0%,
+      var(--color-gradient-purple) 50%,
+      transparent 100%
+    );
+    opacity: 0.4;
+  }
+
+  .year-badge {
+    font-size: var(--font-size-5xl);
+    font-weight: var(--font-weight-bold);
+    background: linear-gradient(
+      135deg,
+      var(--color-text) 0%,
+      var(--color-accent) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    padding: var(--spacing-xs) 0;
+    position: relative;
+    transition: all var(--transition-slow) cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  @media (hover: hover) {
+    .year-section:hover .year-badge {
+      transform: scale(1.05);
+    }
+  }
+
+  .year-count {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-subtle);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: var(--color-bg-subtle);
+    border-radius: var(--radius-full);
+    transition: all var(--transition-slow) cubic-bezier(0.22, 1, 0.36, 1);
+    letter-spacing: var(--letter-spacing-subtle);
+  }
+
+  @media (hover: hover) {
+    .year-section:hover .year-count {
+      background: var(--color-accent-10);
+      color: var(--color-accent);
+    }
+  }
+
+  .post-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: var(--spacing-lg);
+  }
+
+  .post-item {
+    animation: fadeInUp var(--transition-slower) ease-out both;
+    animation-delay: var(--item-delay, 0s);
+    transition:
+      opacity var(--transition-slow),
+      transform var(--transition-slow);
+  }
+
+  .year-section {
+    transition:
+      opacity var(--transition-slow),
+      transform var(--transition-slow);
+  }
+
+  .post-link {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-xl);
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+    border: var(--card-border);
+    background: var(--card-bg);
+    backdrop-filter: blur(var(--card-backdrop-blur));
+    -webkit-backdrop-filter: blur(var(--card-backdrop-blur));
+    outline: none;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  }
+
+  @media (hover: hover) {
+    .post-link:hover {
+      border-color: rgba(255, 255, 255, 0.1);
+      box-shadow: var(--card-shadow-hover), var(--card-glow-accent);
+      transform: translateY(var(--lift-md));
+    }
+  }
+
+  .post-link:focus-visible {
+    outline: none;
+    border-color: transparent;
+    box-shadow:
+      inset 0 0 0 2px var(--color-accent-40),
+      0 0 0 3px var(--color-bg),
+      0 0 0 5px var(--color-accent-30);
+  }
+
+  /* Mobile tap state */
+  .post-link:active {
+    transform: scale(var(--scale-press));
+  }
+
+  .post-main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    flex: 1;
+    min-width: 0;
+  }
+
+  .post-title {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text);
+    transition: color var(--transition-fast);
+    line-height: var(--line-height-snug);
+  }
+
+  @media (hover: hover) {
+    .post-link:hover .post-title {
+      color: var(--color-link);
+    }
+  }
+
+  .post-description {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-subtle);
+    line-height: var(--line-height-relaxed);
+    letter-spacing: var(--letter-spacing-slight);
+    margin: var(--spacing-2xs) 0 0 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .post-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+  }
+
+  .post-tag {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    padding: var(--spacing-2xs) var(--spacing-sm);
+    background: var(--color-bg-subtle);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-full);
+    color: var(--color-text-subtle);
+    text-transform: lowercase;
+    transition: all var(--transition-fast);
+    letter-spacing: var(--letter-spacing-subtle);
+  }
+
+  @media (hover: hover) {
+    .post-link:hover .post-tag {
+      background: var(--color-border);
+      border-color: var(--color-border-hover);
+      color: var(--color-text);
+    }
+  }
+
+  .post-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex-shrink: 0;
+  }
+
+  .post-reading-time {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-2xs);
+    color: var(--color-text-subtle);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: var(--color-bg-subtle);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border-subtle);
+    transition: all var(--transition-fast);
+    letter-spacing: var(--letter-spacing-subtle);
+  }
+
+  .post-reading-time svg {
+    transition: transform var(--transition-base) cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  @media (hover: hover) {
+    .post-link:hover .post-reading-time {
+      background: var(--color-border);
+      border-color: var(--color-border-hover);
+      color: var(--color-text-muted);
+    }
+  }
+
+  .post-meta time {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-subtle);
+    font-variant-numeric: tabular-nums;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: var(--color-bg-subtle);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-subtle);
+    transition: all var(--transition-fast);
+  }
+
+  .post-meta time svg {
+    opacity: var(--opacity-muted);
+    transition: all var(--transition-base) cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @media (hover: hover) {
+    .post-link:hover .post-meta time {
+      background: var(--color-border);
+      border-color: var(--color-border-hover);
+      color: var(--color-text-muted);
+    }
+
+    .post-link:hover .post-meta time svg {
+      opacity: 1;
+    }
+  }
+
+  /* ADR Section */
+  .adr-section {
+    margin-top: var(--spacing-2xl);
+    padding-top: var(--spacing-xl);
+    border-top: 2px solid var(--color-border);
+  }
+
+  .adr-section h2 {
+    font-size: var(--font-size-6xl);
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .adr-intro {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-md);
+    line-height: var(--line-height-loose);
+    letter-spacing: var(--letter-spacing-slight);
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .status {
+    font-size: var(--font-size-xs);
+    flex-shrink: 0;
+  }
+
+  /* ADR Status badges with pulse animation for accepted */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-2xs);
+    font-weight: var(--font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-wider);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-full);
+    transition: all var(--transition-base);
+    position: relative;
+  }
+
+  .badge-success {
+    background: var(--color-success-15);
+    color: var(--color-success);
+    border: 1px solid var(--color-success-30);
+  }
+
+  .badge-success::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-full);
+    background: radial-gradient(
+      ellipse at center,
+      var(--color-success-20) 0%,
+      transparent 70%
+    );
+    opacity: 0;
+    z-index: -1;
+    transition: opacity var(--transition-slow);
+    pointer-events: none;
+  }
+
+  @media (hover: hover) {
+    .post-link:hover .badge-success::before {
+      opacity: 1;
+    }
+  }
+
+  .badge-warning {
+    background: var(--color-warning-15);
+    color: var(--color-warning);
+    border: 1px solid var(--color-warning-30);
+  }
+
+  .empty {
+    color: var(--color-text-muted);
+    text-align: center;
+    padding: var(--spacing-2xl);
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(var(--translate-md));
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 640px) {
+    .page-title {
+      font-size: var(--font-size-8xl);
+    }
+
+    .page-subtitle {
+      font-size: var(--font-size-xl);
+    }
+
+    .featured-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .filter-section {
+      padding: var(--spacing-md);
+      overflow: hidden;
+    }
+
+    .filter-group {
+      flex-direction: column;
+      align-items: flex-start;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .filter-pills {
+      width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      /* Hide scrollbar on mobile but keep functionality */
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    .filter-pills::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Prevent filter pill shrinking on mobile */
+    .filter-pill {
+      flex-shrink: 0;
+      font-size: var(--font-size-xs);
+      padding: var(--spacing-xs) var(--spacing-sm);
+    }
+
+    .post-link {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-md);
+    }
+
+    .post-meta {
+      width: 100%;
+      justify-content: flex-start;
+    }
+
+    /* Disable lift on hover for mobile - use press only */
+    .post-link:hover {
+      transform: none;
+    }
+
+    .featured-card h3 {
+      font-size: var(--font-size-2xl);
+    }
+
+    .year-badge {
+      font-size: var(--font-size-3xl);
+    }
+  }
+
+  /* Extra small screens (iPhone SE 375px) */
+  @media (max-width: 400px) {
+    .page-title {
+      font-size: var(--font-size-6xl);
+    }
+
+    .featured-card h3 {
+      font-size: var(--font-size-xl);
+    }
+
+    .featured-card p {
+      font-size: var(--font-size-xs);
+    }
+
+    .post-link {
+      padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    .post-title {
+      font-size: var(--font-size-lg);
+    }
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .featured-card,
+    .filter-pill,
+    .post-link,
+    .tag-chip,
+    .year-badge {
+      transition: none;
+    }
+
+    .featured-card,
+    .post-link {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+
+    .post-link:hover {
+      transform: none;
+    }
+  }
+</style>

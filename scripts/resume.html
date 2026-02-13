@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wayne Nolette - Resume</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          'Inter',
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+        font-size: 8.5pt;
+        line-height: 1.3;
+        color: #1a1a1a;
+        background: white;
+        padding: 0.3in 0.45in;
+        max-width: 8.5in;
+        margin: 0 auto;
+      }
+
+      /* Header */
+      header {
+        text-align: center;
+        margin-bottom: 10px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #0891b2;
+      }
+
+      h1 {
+        font-size: 22pt;
+        font-weight: 700;
+        color: #1a1a1a;
+        letter-spacing: -0.5px;
+        margin-bottom: 4px;
+      }
+
+      .contact-info {
+        font-size: 9pt;
+        color: #4b5563;
+        margin-bottom: 2px;
+      }
+
+      .contact-info a {
+        color: #0891b2;
+        text-decoration: none;
+      }
+
+      .links {
+        font-size: 9pt;
+      }
+
+      .links a {
+        color: #0891b2;
+        text-decoration: none;
+        margin: 0 8px;
+      }
+
+      /* Summary */
+      .summary {
+        margin-bottom: 8px;
+        padding: 6px 10px;
+        background: #f8fafc;
+        border-left: 3px solid #0891b2;
+        border-radius: 0 4px 4px 0;
+      }
+
+      .summary p {
+        font-size: 8.5pt;
+        color: #374151;
+        line-height: 1.35;
+      }
+
+      /* Section headers */
+      h2 {
+        font-size: 9pt;
+        font-weight: 700;
+        color: #0e7490;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 4px;
+        padding-bottom: 2px;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      /* Experience */
+      .experience-section {
+        margin-bottom: 6px;
+      }
+
+      .job {
+        margin-bottom: 6px;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      .job:last-child {
+        margin-bottom: 0;
+      }
+
+      .job-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 1px;
+      }
+
+      .company {
+        font-size: 10pt;
+        font-weight: 700;
+        color: #1a1a1a;
+      }
+
+      .date {
+        font-size: 8.5pt;
+        font-weight: 500;
+        color: #6b7280;
+      }
+
+      .job-title-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 4px;
+      }
+
+      .job-title {
+        font-size: 9pt;
+        font-weight: 500;
+        color: #4b5563;
+        font-style: italic;
+      }
+
+      .location {
+        font-size: 8.5pt;
+        color: #6b7280;
+      }
+
+      .highlights {
+        list-style: none;
+        padding-left: 0;
+      }
+
+      .highlights li {
+        position: relative;
+        padding-left: 10px;
+        margin-bottom: 1px;
+        font-size: 8pt;
+        line-height: 1.35;
+        color: #374151;
+      }
+
+      .highlights li::before {
+        content: '•';
+        position: absolute;
+        left: 0;
+        color: #0891b2;
+        font-weight: bold;
+      }
+
+      /* Metrics emphasis */
+      .metric {
+        font-weight: 600;
+        color: #0e7490;
+      }
+
+      /* Education */
+      .education-section {
+        margin-bottom: 6px;
+      }
+
+      .edu-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 2px;
+      }
+
+      .edu-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .degree {
+        font-weight: 600;
+        font-size: 8.5pt;
+        color: #1a1a1a;
+      }
+
+      .school {
+        font-size: 8pt;
+        color: #4b5563;
+      }
+
+      .edu-meta {
+        text-align: right;
+      }
+
+      .edu-date {
+        font-size: 8pt;
+        font-weight: 500;
+        color: #6b7280;
+      }
+
+      .edu-location {
+        font-size: 8pt;
+        color: #6b7280;
+      }
+
+      /* Skills */
+      .skills-section {
+        margin-bottom: 0;
+      }
+
+      .skills-grid {
+        display: grid;
+        grid-template-columns: 85px 1fr;
+        gap: 2px 8px;
+      }
+
+      .skill-category {
+        font-weight: 600;
+        font-size: 8pt;
+        color: #1a1a1a;
+      }
+
+      .skill-list {
+        font-size: 8pt;
+        color: #374151;
+      }
+
+      /* Print styles */
+      @media print {
+        body {
+          padding: 0.4in 0.5in;
+        }
+
+        a {
+          color: #0891b2 !important;
+        }
+      }
+
+      @page {
+        size: letter;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Wayne Nolette</h1>
+      <div class="contact-info">
+        <a href="mailto:Waynenolette@gmail.com">Waynenolette@gmail.com</a> | +1
+        603 998-1139
+      </div>
+      <div class="links">
+        <a href="https://wayne-nolette.github.io/wayne-nolette/"
+          >wayne-nolette.github.io/wayne-nolette</a
+        >
+        |
+        <a href="https://linkedin.com/in/wayne-nolette-376416168"
+          >linkedin.com/in/wayne-nolette-376416168</a
+        >
+      </div>
+    </header>
+
+    <section class="summary">
+      <p>
+        Technical Operations Manager specializing in AI systems, cloud
+        automation, and data-powered decisioning. Architected
+        <span class="metric">IE Hub</span> — a unified operational intelligence
+        platform embedding production-grade AI via the Agentic Platform, with
+        <span class="metric">36 governed AI tools</span>,
+        <span class="metric">16+ Cloud Run services</span>, and
+        <span class="metric">21 BigQuery tables</span>. Bridging data
+        infrastructure, platform reliability, and team performance.
+      </p>
+    </section>
+
+    <section class="experience-section">
+      <h2>Experience</h2>
+
+      <div class="job">
+        <div class="job-header">
+          <span class="company">ZoomInfo</span>
+          <span class="date">January 2025 - Present</span>
+        </div>
+        <div class="job-title-row">
+          <span class="job-title"
+            >Technical Operations Manager II, AI Systems &amp; Cloud
+            Infrastructure</span
+          >
+          <span class="location">Waltham, MA</span>
+        </div>
+        <ul class="highlights">
+          <li>
+            Architected <span class="metric">IE Hub</span> — a unified
+            operational intelligence platform for Infrastructure Engineering,
+            consolidating DataDog, PagerDuty, Jira, Slack, Zoom, and Backstage
+            data into a single team-scoped system for service health, change
+            management compliance, incident cost analysis, and monitor
+            governance
+          </li>
+          <li>
+            Integrated enterprise-grade AI investigation agent via the internal
+            Agentic Platform — powered by
+            <span class="metric">Claude 4.5 Sonnet</span> for reasoning and
+            GPT-4o-mini for suggestions, with
+            <span class="metric">36 governed production tools</span>,
+            <span class="metric">21 BigQuery tables</span>, structured tool
+            invocation with input sanitization, and execution logging with
+            timing spans
+          </li>
+          <li>
+            Engineered OrgResolver identity system enabling natural language
+            queries with automatic user-to-team-to-service resolution via
+            BigQuery, supporting full leadership chain traversal (director
+            &rarr; VP &rarr; SVP)
+          </li>
+          <li>
+            Built <span class="metric">15-page</span> React 19 + TypeScript
+            frontend with Team Hub dashboard, Executive Briefing, incident cost
+            analytics, DataDog monitor governance for
+            <span class="metric">9,000+ monitors</span>, and Okta SSO
+          </li>
+          <li>
+            Architected Terraform-managed GCP infrastructure for
+            <span class="metric">16+ Cloud Run services</span> with unified
+            service accounts, Cloud Scheduler automation, and BigQuery datasets
+            across 7 governance domains
+          </li>
+          <li>
+            Designed predictive release risk scoring engine (0-100) correlating
+            deployment speed, change management violations, and historical
+            incident data to flag high-risk deployments before production impact
+          </li>
+          <li>
+            Created OpsieBot — a Slack bot using Claude AI for natural language
+            parsing to automate PagerDuty team renames, generating GitHub PRs
+            with atomic Terraform changes and duplicate validation safeguards
+          </li>
+        </ul>
+      </div>
+
+      <div class="job">
+        <div class="job-header">
+          <span class="company">BAE Systems, Inc.</span>
+          <span class="date">July 2023 - January 2025</span>
+        </div>
+        <div class="job-title-row">
+          <span class="job-title"
+            >Process Engineer II, Microwave &amp; RF Manufacturing</span
+          >
+          <span class="location">Nashua, NH</span>
+        </div>
+        <ul class="highlights">
+          <li>
+            Developed and implemented a real-time LIVE SPC Dashboard to monitor
+            and evaluate production equipment performance, leading to
+            improvement in operational efficiency
+          </li>
+          <li>
+            Designed tools for enhanced visibility and tracking of bond health
+            on RF components, resulting in reduction in defect rates
+          </li>
+          <li>
+            Led cross-functional teams in application of MIL-STD-883 standards,
+            ensuring compliance and improving process consistency
+          </li>
+          <li>
+            Received <span class="metric">Pioneer Award</span> for innovation
+            and impact
+          </li>
+        </ul>
+      </div>
+
+      <div class="job">
+        <div class="job-header">
+          <span class="company">BAE Systems, Inc.</span>
+          <span class="date">July 2022 - June 2023</span>
+        </div>
+        <div class="job-title-row">
+          <span class="job-title">Quality Engineer I, Quality Assurance</span>
+          <span class="location">Merrimack, NH</span>
+        </div>
+        <ul class="highlights">
+          <li>
+            Implemented quality control initiatives achieving
+            <span class="metric">12% reduction</span> in overall defect rates
+            across critical components
+          </li>
+          <li>
+            Led Root Cause and Corrective Action (RCCA), identifying systemic
+            issues and implementing solutions that reduced recurring defects
+          </li>
+          <li>
+            Optimized inspection processes through integration of automated
+            tools, reducing manual tracking and increasing efficiency
+          </li>
+          <li>
+            Received <span class="metric">Pathfinder Award</span> for
+            contributions to quality engineering
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="education-section">
+      <h2>Education</h2>
+      <div class="edu-item">
+        <div>
+          <span class="degree">Master of Science, Engineering Management</span>
+          <span class="school"> — University of Massachusetts Lowell</span>
+        </div>
+        <div class="edu-meta">
+          <span class="edu-date">2024 - 2025</span>
+        </div>
+      </div>
+      <div class="edu-item">
+        <div>
+          <span class="degree"
+            >Bachelor of Science, Mechanical Engineering</span
+          >
+          <span class="school"> — Worcester Polytechnic Institute</span>
+        </div>
+        <div class="edu-meta">
+          <span class="edu-date">2017 - 2022</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="skills-section">
+      <h2>Skills</h2>
+      <div class="skills-grid">
+        <span class="skill-category">Cloud & AI</span>
+        <span class="skill-list"
+          >GCP, Cloud Run, BigQuery, Terraform, Claude AI / LLM Agents, Prompt
+          Engineering</span
+        >
+
+        <span class="skill-category">Development</span>
+        <span class="skill-list"
+          >Python, TypeScript, React, REST APIs, Docker / Kubernetes, Helm</span
+        >
+
+        <span class="skill-category">Data & Ops</span>
+        <span class="skill-list"
+          >BigQuery, DataDog, PagerDuty, Jira, Slack Integrations, Incident
+          Response</span
+        >
+
+        <span class="skill-category">Process</span>
+        <span class="skill-list"
+          >Root Cause Analysis, Release Risk Scoring, Power BI / Tableau, Change
+          Management</span
+        >
+      </div>
+    </section>
+  </body>
+</html>

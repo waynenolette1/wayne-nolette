@@ -1,0 +1,1412 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE_CONFIG } from '../config/constants';
+import ContactCTA from '../components/ContactCTA.astro';
+
+const experience = [
+  {
+    company: 'ZoomInfo',
+    title: 'Technical Operations Manager II',
+    team: 'AI Systems & Cloud Infrastructure',
+    location: 'Waltham, MA',
+    period: 'January 2025 - Present',
+    highlights: [
+      'Architected IE Hub — a unified operational intelligence platform for Infrastructure Engineering, consolidating DataDog, PagerDuty, Jira, Slack, Zoom, and Backstage data into a single team-scoped system for service health visibility, change management compliance, incident cost analysis, and monitor governance',
+      'Integrated enterprise-grade AI investigation agent into IE Hub via the internal Agentic Platform — powered by Claude 4.5 Sonnet for reasoning and GPT-4o-mini for suggestion generation, with 36 governed production tools, 21 BigQuery tables, structured tool invocation with input sanitization and guardrails, and execution logging with timing spans',
+      'Engineered OrgResolver identity system enabling natural language queries ("show my team\'s CIs") with automatic user-to-team-to-service resolution via BigQuery, supporting full leadership chain traversal (director → VP → SVP) for team-scoped operational intelligence',
+      'Built 15-page React 19 + TypeScript frontend (XCL Tools ZI) with Team Hub dashboard, Executive Briefing, maturity model tracking, incident cost analytics, CMG/CMv2 violation monitoring, DataDog monitor governance for 9,000+ monitors, PagerDuty schedule health, and Okta SSO authentication',
+      'Architected Terraform-managed GCP infrastructure for 16+ Cloud Run services with unified service accounts, Cloud Scheduler automation, and BigQuery datasets across 7 governance domains — deployed via Jenkins → Artifact Registry → Cloud Run pipeline across dev/stg/prd environments',
+      'Designed predictive release risk scoring engine (0-100) correlating deployment speed, change management violations, and historical incident data to flag high-risk deployments before production impact',
+      'Built financial impact analysis pipeline calculating per-incident costs from engineer time, war room meetings, and salary reference data — enabling ROI-driven investment in incident prevention across engineering teams',
+      'Created OpsieBot — a Slack bot using Claude AI for natural language parsing to automate PagerDuty team renames, generating GitHub PRs with comprehensive Terraform changes and duplicate validation safeguards',
+      'Recognized as personal MVP by teammates — nominated for transforming operational challenges into automated solutions that drive clarity across dozens of engineering groups',
+    ],
+  },
+  {
+    company: 'BAE Systems, Inc.',
+    title: 'Process Engineer II',
+    team: 'Microwave & RF Manufacturing',
+    location: 'Nashua, NH',
+    period: 'July 2023 - January 2025',
+    highlights: [
+      'Developed and implemented a real-time data collection system (LIVE SPC Dashboard) to monitor and evaluate production equipment performance, leading to an improvement in operational efficiency',
+      'Designed tools for enhanced visibility and tracking of bond health on RF components, resulting in a reduction in defect rates',
+      'Led cross-functional teams in the application of MIL-STD-883 standards, ensuring compliance and improving process consistency across departments',
+      'Spearheaded process improvements that reduced inspection times through the adoption of advanced analytics and automated reporting tools',
+      'Received Pioneer Award for innovation and impact',
+    ],
+  },
+  {
+    company: 'BAE Systems, Inc.',
+    title: 'Quality Engineer I',
+    team: 'Quality Assurance',
+    location: 'Merrimack, NH',
+    period: 'July 2022 - June 2023',
+    highlights: [
+      'Implemented quality control initiatives that led to 12% reduction in overall defect rates across critical components, enhancing overall product reliability',
+      'Led Root Cause and Corrective Action (RCCA), identifying systemic issues and implementing solutions that reduced recurring defects',
+      'Collaborated with cross-functional teams to ensure compliance with industry standards, contributing to successful audits and certifications',
+      'Optimized inspection processes through integration of automated tools, reducing manual tracking and increasing inspection efficiency',
+      'Received Pathfinder Award for contributions to quality engineering',
+    ],
+  },
+];
+
+const education = [
+  {
+    degree: 'Master of Science, Engineering Management',
+    school: 'University of Massachusetts Lowell',
+    location: 'Lowell, MA',
+    period: '2024 - 2025',
+  },
+  {
+    degree: 'Bachelor of Science, Mechanical Engineering',
+    school: 'Worcester Polytechnic Institute',
+    location: 'Worcester, MA',
+    period: '2017 - 2022',
+  },
+];
+
+const skills = {
+  'Cloud & AI': [
+    'Google Cloud Platform (GCP)',
+    'Cloud Run',
+    'BigQuery',
+    'Terraform IaC',
+    'Claude AI / LLM Agents',
+    'Prompt Engineering',
+    'Multi-Agent Orchestration (MCP)',
+  ],
+  Development: [
+    'Python',
+    'TypeScript',
+    'React',
+    'REST APIs',
+    'Docker / Kubernetes',
+    'Helm',
+  ],
+  'Data & Operations': [
+    'BigQuery (21 tables)',
+    'DataDog',
+    'PagerDuty',
+    'Jira / Confluence',
+    'Slack Integrations',
+    'Incident Response',
+  ],
+  'Process & Analytics': [
+    'Root Cause Analysis (RCCA)',
+    'Release Risk Scoring',
+    'Power BI / Tableau',
+    'Change Management',
+    'Cost-of-Incident Modeling',
+  ],
+};
+---
+
+<BaseLayout
+  title="Resume"
+  description="Tech Manager specializing in AI systems, cloud automation, GCP, BigQuery, DevOps, and data-powered decisioning."
+>
+  <div class="page-header resume-hero">
+    <div class="availability-badge">
+      <span class="pulse"></span>
+      Open to new opportunities
+    </div>
+    <h1 class="page-title">Wayne Nolette</h1>
+    <p class="title">Tech Manager | AI Systems & Cloud Automation</p>
+    <p class="tagline">GCP · BigQuery · DevOps · Data-Powered Decisioning</p>
+
+    <div class="cta-group">
+      <a
+        href={`${import.meta.env.BASE_URL}wayne_nolette_resume.pdf`}
+        class="download-btn"
+        download
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Download PDF
+      </a>
+      <a
+        href={`mailto:${SITE_CONFIG.email}`}
+        class="email-btn"
+        aria-label={`Email ${SITE_CONFIG.email}`}
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path
+            d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+          ></path>
+          <polyline points="22,6 12,13 2,6"></polyline>
+        </svg>
+        Email Me
+      </a>
+    </div>
+
+    <div class="contact-row">
+      <a href={SITE_CONFIG.siteUrl} target="_blank" rel="noopener noreferrer">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+          ></path>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+          ></path>
+        </svg>
+        Portfolio
+      </a>
+      <a href={SITE_CONFIG.linkedin} target="_blank" rel="noopener noreferrer">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"
+          ></path>
+        </svg>
+        LinkedIn
+      </a>
+    </div>
+
+    <div class="impact-highlights">
+      <div class="impact-item">
+        <span class="impact-value">36</span>
+        <span class="impact-label">AI Tools Built</span>
+      </div>
+      <div class="impact-item">
+        <span class="impact-value">12%</span>
+        <span class="impact-label">Defect Reduction</span>
+      </div>
+      <div class="impact-item">
+        <span class="impact-value">16+</span>
+        <span class="impact-label">Cloud Services</span>
+      </div>
+      <div class="impact-item">
+        <span class="impact-value">21</span>
+        <span class="impact-label">BigQuery Tables</span>
+      </div>
+    </div>
+  </div>
+
+  <section class="summary">
+    <p class="summary-lead">
+      36 AI tools. 16+ cloud services. One unified operational intelligence
+      platform.
+    </p>
+    <p class="summary-detail">
+      From manufacturing floors to cloud infrastructure. Technical Operations
+      Manager architecting IE Hub — an operational intelligence platform
+      embedding production-grade AI via the Agentic Platform. Automating
+      engineering workflows at scale and driving operational clarity across
+      Infrastructure Engineering.
+    </p>
+  </section>
+
+  <section class="experience">
+    <h2>Experience</h2>
+    {
+      experience.map((job) => (
+        <div class="job">
+          <div class="job-header">
+            <div>
+              <h3>{job.company}</h3>
+              <p class="job-title">{job.title}</p>
+              {job.team && <p class="job-team">{job.team}</p>}
+            </div>
+            <div class="job-meta">
+              <span class="period">{job.period}</span>
+              <span class="location">{job.location}</span>
+            </div>
+          </div>
+          <ul class="highlights">
+            {job.highlights.map((highlight, i) => (
+              <li class={i >= 3 ? 'collapsible' : ''}>{highlight}</li>
+            ))}
+          </ul>
+          {job.highlights.length > 3 && (
+            <button type="button" class="show-more-btn" aria-expanded="false">
+              <span class="show-more-text">
+                Show {job.highlights.length - 3} more
+              </span>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+          )}
+        </div>
+      ))
+    }
+  </section>
+
+  <section class="education">
+    <h2>Education</h2>
+    {
+      education.map((edu) => (
+        <div class="edu-item">
+          <div>
+            <h3>{edu.degree}</h3>
+            <p class="school">{edu.school}</p>
+          </div>
+          <div class="edu-meta">
+            <span class="period">{edu.period}</span>
+            <span class="location">{edu.location}</span>
+          </div>
+        </div>
+      ))
+    }
+  </section>
+
+  <section class="skills">
+    <h2>Skills</h2>
+    <div class="skills-grid">
+      {
+        Object.entries(skills).map(([category, items]) => (
+          <div class="skill-category">
+            <h3>{category}</h3>
+            <div class="skill-tags">
+              {items.map((skill, index) => (
+                <>
+                  <span class="skill-tag">{skill}</span>
+                  {index < items.length - 1 && ' '}
+                </>
+              ))}
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <ContactCTA
+    heading="Interested in working together?"
+    text="I build scalable systems and automate workflows that drive operational clarity. Let's talk."
+  />
+</BaseLayout>
+
+<style>
+  /* ===== HEADER SECTION ===== */
+  /* Resume hero - unified spacing with other page headers */
+  .resume-hero {
+    position: relative;
+    text-align: center;
+    max-width: 780px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: var(--spacing-xl);
+    padding-bottom: var(--spacing-lg);
+    padding-top: var(--spacing-xl);
+  }
+
+  .availability-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    background: var(--color-success-10);
+    border: 1px solid var(--color-success-30);
+    color: var(--color-success);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    margin-top: var(--spacing-md);
+    margin-bottom: var(--spacing-xs);
+    letter-spacing: var(--letter-spacing-subtle);
+  }
+
+  .pulse {
+    width: var(--size-sm);
+    height: var(--size-sm);
+    background: var(--color-success);
+    border-radius: var(--radius-full);
+    animation: pulse var(--animation-pulse) infinite;
+    box-shadow: 0 0 8px var(--color-success-60);
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+      box-shadow: 0 0 8px var(--color-success-60);
+    }
+    50% {
+      opacity: var(--opacity-soft);
+      transform: scale(1.3);
+      box-shadow: 0 0 16px var(--color-success-80);
+    }
+  }
+
+  .resume-hero .page-title {
+    margin: 0 0 var(--spacing-2xs) 0;
+    font-family: var(--font-display);
+    font-size: var(--font-size-9xl);
+    font-weight: var(--font-weight-normal);
+    letter-spacing: -0.02em;
+    line-height: var(--line-height-tight);
+    background: linear-gradient(
+      135deg,
+      var(--color-text) 0%,
+      var(--color-text-muted) 50%,
+      var(--color-accent) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .title {
+    font-size: var(--font-size-5xl);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-link);
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-wide);
+    max-width: none;
+    margin: 0 auto var(--spacing-sm) auto;
+  }
+
+  .tagline {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-subtle);
+    letter-spacing: var(--letter-spacing-wide);
+    max-width: none;
+    margin: 0 auto var(--spacing-md) auto;
+    text-align: center;
+  }
+
+  /* CTA group - side by side primary + secondary buttons */
+  .cta-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+  }
+
+  /* Email button - secondary outlined style */
+  .email-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background: var(--color-bg-subtle);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-md);
+    letter-spacing: var(--letter-spacing-subtle);
+    text-decoration: none;
+    transition: all var(--transition-slow);
+    white-space: nowrap;
+  }
+
+  .email-btn:focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: var(--outline-offset-sm);
+  }
+
+  @media (hover: hover) {
+    .email-btn:hover {
+      border-color: var(--color-link);
+      color: var(--color-link);
+      background: var(--color-bg-elevated);
+      transform: translateY(var(--lift-sm));
+      box-shadow: var(--shadow-md);
+      text-decoration: none;
+    }
+  }
+
+  .contact-row {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-md);
+    background: var(--color-bg-subtle);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-full);
+    padding: var(--spacing-xs) var(--spacing-md);
+  }
+
+  .contact-row a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    letter-spacing: var(--letter-spacing-subtle);
+    color: var(--color-text-muted);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-full);
+    transition: all var(--transition-fast);
+  }
+
+  .contact-row a:focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: var(--outline-offset-sm);
+  }
+
+  @media (hover: hover) {
+    .contact-row a:hover {
+      color: var(--color-link);
+      text-decoration: none;
+      transform: translateY(var(--lift-subtle));
+    }
+
+    .contact-row a:hover svg {
+      transform: scale(var(--scale-hover));
+    }
+  }
+
+  .contact-row a svg {
+    transition: transform var(--transition-fast);
+  }
+
+  /* Download button with icon animation */
+  .download-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background: linear-gradient(
+      135deg,
+      var(--color-accent) 0%,
+      var(--color-gradient-indigo) 50%,
+      var(--color-gradient-purple) 100%
+    );
+    background-size: 200% 200%;
+    color: var(--color-btn-text);
+    border-radius: var(--radius-md);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-md);
+    letter-spacing: var(--letter-spacing-subtle);
+    text-decoration: none;
+    transition: all var(--transition-slow);
+    white-space: nowrap;
+    box-shadow: 0 2px 8px 0 var(--color-accent-25);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .download-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--color-overlay-white-20),
+      transparent
+    );
+    transition: left var(--transition-slowest);
+  }
+
+  .download-btn:focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: var(--outline-offset-sm);
+  }
+
+  @media (hover: hover) {
+    .download-btn:hover {
+      transform: translateY(var(--lift-md));
+      box-shadow: 0 4px 12px 0 var(--color-accent-30);
+      text-decoration: none;
+      color: var(--color-btn-text);
+      background-position: 100% 100%;
+    }
+
+    .download-btn:hover::before {
+      left: 100%;
+    }
+
+    .download-btn:hover svg {
+      animation: downloadBounce var(--animation-fade-in-slow) ease infinite;
+    }
+  }
+
+  .download-btn svg {
+    transition: transform var(--transition-slow);
+  }
+
+  @keyframes downloadBounce {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(var(--translate-2xs));
+    }
+  }
+
+  /* ===== IMPACT HIGHLIGHTS - Enhanced gradient and glow ===== */
+  .impact-highlights {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-md);
+    padding: var(--spacing-xl);
+    background: linear-gradient(
+      135deg,
+      var(--color-accent-08) 0%,
+      var(--color-gradient-indigo-10) 25%,
+      var(--color-gradient-purple-08) 50%,
+      var(--color-gradient-violet-06) 75%,
+      var(--color-gradient-fuchsia-04) 100%
+    );
+    border: 1px solid var(--color-gradient-purple-20);
+    border-radius: var(--radius-lg);
+    margin-top: var(--spacing-lg);
+    margin-bottom: 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .impact-highlights::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--color-gradient-purple-50),
+      transparent
+    );
+  }
+
+  .impact-highlights::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--color-accent-30),
+      transparent
+    );
+  }
+
+  .impact-item {
+    text-align: center;
+    padding: var(--spacing-sm);
+    transition: transform var(--transition-slow);
+  }
+
+  @media (hover: hover) {
+    .impact-item:hover {
+      transform: translateY(var(--lift-sm));
+    }
+  }
+
+  .impact-value {
+    display: block;
+    font-size: var(--font-size-8xl);
+    font-weight: var(--font-weight-extrabold);
+    background: linear-gradient(
+      135deg,
+      var(--color-link) 0%,
+      var(--color-gradient-purple) 50%,
+      var(--color-gradient-pink) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .impact-label {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    font-weight: var(--font-weight-medium);
+    margin-top: var(--spacing-xs);
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-wider);
+  }
+
+  @media (max-width: 640px) {
+    .impact-highlights {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .summary {
+    margin-bottom: var(--spacing-xl);
+    max-width: 780px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    padding: var(--spacing-xl);
+    background: linear-gradient(
+      135deg,
+      var(--color-accent-5) 0%,
+      var(--color-gradient-purple-5) 100%
+    );
+    border: 1px solid var(--color-accent-20);
+    border-radius: var(--radius-lg);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .summary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      var(--color-accent),
+      var(--color-gradient-purple),
+      var(--color-gradient-pink)
+    );
+  }
+
+  .summary-lead {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text);
+    line-height: var(--line-height-snug);
+    margin: 0 0 var(--spacing-sm) 0;
+  }
+
+  .summary-detail {
+    font-size: var(--font-size-md);
+    line-height: var(--line-height-loose);
+    letter-spacing: var(--letter-spacing-slight);
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  section h2 {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-caps);
+    color: var(--color-text-muted);
+    margin: 0 0 var(--spacing-lg) 0;
+    padding-bottom: var(--spacing-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    position: relative;
+  }
+
+  section h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      var(--color-accent),
+      var(--color-gradient-purple)
+    );
+    border-radius: var(--radius-full);
+  }
+
+  /* ===== EXPERIENCE SECTION - Timeline layout ===== */
+  .experience {
+    margin-bottom: var(--spacing-2xl);
+    position: relative;
+  }
+
+  .experience h2 {
+    margin-left: 0;
+  }
+
+  .job {
+    margin-bottom: var(--spacing-xl);
+    position: relative;
+    padding: var(--spacing-lg);
+    padding-left: calc(var(--spacing-lg) + 3px);
+    background: var(--color-bg-subtle);
+    border: 1px solid var(--color-border-subtle);
+    border-left: 3px solid var(--color-accent);
+    border-radius: var(--radius-lg);
+    transition: all var(--transition-slow);
+  }
+
+  @media (hover: hover) {
+    .job:hover {
+      border-color: var(--color-border-hover);
+      box-shadow: var(--shadow-md);
+      transform: translateY(var(--lift-sm));
+    }
+  }
+
+  .job:focus-visible {
+    outline: none;
+    box-shadow:
+      inset 0 0 0 2px var(--color-accent-40),
+      0 0 0 3px var(--color-bg),
+      0 0 0 5px var(--color-accent-30);
+  }
+
+  .job:last-child {
+    margin-bottom: 0;
+  }
+
+  .job-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+  }
+
+  .job h3 {
+    font-size: var(--font-size-5xl);
+    margin: 0;
+    color: var(--color-text); /* Fallback for non-supporting browsers */
+    background: linear-gradient(
+      135deg,
+      var(--color-text) 0%,
+      var(--color-accent) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    transition: all var(--transition-slow);
+  }
+
+  @media (hover: hover) {
+    .job:hover h3 {
+      -webkit-text-fill-color: transparent;
+    }
+  }
+
+  .job-title {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text);
+    margin: var(--spacing-xs) 0 0 0;
+    font-size: var(--font-size-lg);
+  }
+
+  .job-team {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    margin: var(--spacing-2xs) 0 0 0;
+    font-style: italic;
+    letter-spacing: var(--letter-spacing-subtle);
+  }
+
+  .job-meta {
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .job-meta .period {
+    display: inline-block;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(
+      --color-link-hover
+    ); /* Using lighter blue for WCAG AA contrast (7.2:1) */
+    background: var(--color-accent-10);
+    padding: var(--spacing-2xs) var(--spacing-sm);
+    border-radius: var(--radius-full);
+  }
+
+  .job-meta .location {
+    display: block;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-subtle);
+    margin-top: var(--spacing-xs);
+    letter-spacing: var(--letter-spacing-subtle);
+  }
+
+  /* Custom styled bullet points */
+  .highlights {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .highlights li {
+    position: relative;
+    padding-left: var(--spacing-xl);
+    padding-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-loose);
+    letter-spacing: var(--letter-spacing-slight);
+    color: var(--color-text-muted);
+    transition: color var(--transition-base);
+    border-bottom: 1px solid var(--color-border-subtle);
+  }
+
+  .highlights li:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
+  }
+
+  .highlights li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: var(--em-lg);
+    width: var(--size-sm);
+    height: var(--size-sm);
+    background: linear-gradient(
+      135deg,
+      var(--color-accent),
+      var(--color-gradient-purple)
+    );
+    border-radius: var(--radius-2xs);
+    transform: rotate(45deg);
+    opacity: 0.8;
+    filter: drop-shadow(0 0 4px var(--color-accent-25));
+    transition: all var(--transition-base);
+  }
+
+  @media (hover: hover) {
+    .highlights li:hover {
+      color: var(--color-text);
+    }
+
+    .highlights li:hover::before {
+      opacity: 1;
+      transform: rotate(45deg) scale(1.2);
+    }
+  }
+
+  /* Show more button - only visible on mobile */
+  .show-more-btn {
+    display: none;
+  }
+
+  @media (max-width: 640px) {
+    .highlights li.collapsible {
+      display: none;
+    }
+
+    .highlights.expanded li.collapsible {
+      display: list-item;
+    }
+
+    .show-more-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+      margin-top: var(--spacing-xs);
+      padding: var(--spacing-xs) var(--spacing-sm);
+      min-height: var(--touch-target);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-link);
+      background: var(--color-accent-5);
+      border: 1px solid var(--color-accent-20);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all var(--transition-fast);
+    }
+
+    .show-more-btn:hover {
+      background: var(--color-accent-10);
+      border-color: var(--color-accent-35);
+    }
+
+    .show-more-btn[aria-expanded='true'] svg {
+      transform: rotate(180deg);
+    }
+
+    .show-more-btn svg {
+      transition: transform var(--transition-fast);
+    }
+  }
+
+  /* ===== EDUCATION SECTION - Card-based layout ===== */
+  .education {
+    margin-bottom: var(--spacing-2xl);
+  }
+
+  .edu-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-lg);
+    background: var(--color-bg-subtle);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border-subtle);
+    position: relative;
+    overflow: hidden;
+    transition: all var(--transition-slow);
+  }
+
+  /* Georgia Tech - Gold accent */
+  .edu-item:first-child {
+    border-left: var(--border-highlight) solid var(--color-edu-gatech);
+  }
+
+  .edu-item:first-child::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-edu-gatech-08), transparent);
+    pointer-events: none;
+  }
+
+  /* Edinburgh - Blue accent */
+  .edu-item:nth-child(2) {
+    border-left: var(--border-highlight) solid var(--color-edu-edinburgh);
+  }
+
+  .edu-item:nth-child(2)::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      var(--color-edu-edinburgh-08),
+      transparent
+    );
+    pointer-events: none;
+  }
+
+  @media (hover: hover) {
+    .edu-item:hover {
+      transform: translateY(var(--lift-sm));
+      box-shadow: var(--shadow-lg);
+    }
+
+    .edu-item:hover h3 {
+      -webkit-text-fill-color: transparent;
+    }
+  }
+
+  .edu-item:focus-visible {
+    outline: none;
+    box-shadow:
+      inset 0 0 0 2px var(--color-accent-40),
+      0 0 0 3px var(--color-bg),
+      0 0 0 5px var(--color-accent-30);
+  }
+
+  .edu-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .edu-item h3 {
+    font-size: var(--font-size-4xl);
+    margin: 0;
+    color: var(--color-text);
+    font-weight: var(--font-weight-bold);
+    background: linear-gradient(135deg, var(--color-text), var(--color-accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+
+  .school {
+    font-size: var(--font-size-lg);
+    color: var(--color-text-muted);
+    margin: var(--spacing-xs) 0 0 0;
+    font-weight: var(--font-weight-medium);
+    letter-spacing: var(--letter-spacing-slight);
+  }
+
+  .edu-meta {
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .edu-meta .period {
+    display: inline-block;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(
+      --color-link-hover
+    ); /* Using lighter blue for WCAG AA contrast (7.2:1) */
+    background: var(--color-accent-10);
+    padding: var(--spacing-2xs) var(--spacing-sm);
+    border-radius: var(--radius-full);
+  }
+
+  .edu-meta .location {
+    display: block;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-subtle);
+    margin-top: var(--spacing-xs);
+    letter-spacing: var(--letter-spacing-subtle);
+  }
+
+  /* ===== SKILLS SECTION - Enhanced with icons and animations ===== */
+  .skills {
+    margin-bottom: var(--spacing-2xl);
+  }
+
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--spacing-lg);
+  }
+
+  .skill-category {
+    padding: var(--spacing-lg);
+    background: var(--color-bg-subtle);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-lg);
+    transition: all var(--transition-slow);
+    opacity: 0;
+    transform: translateY(var(--translate-md));
+    animation: skillFadeIn var(--animation-fade-in-slow) ease forwards;
+  }
+
+  .skill-category:nth-child(1) {
+    animation-delay: var(--delay-1);
+  }
+  .skill-category:nth-child(2) {
+    animation-delay: var(--delay-2);
+  }
+  .skill-category:nth-child(3) {
+    animation-delay: var(--delay-3);
+  }
+  .skill-category:nth-child(4) {
+    animation-delay: var(--delay-4);
+  }
+
+  @keyframes skillFadeIn {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (hover: hover) {
+    .skill-category:hover {
+      transform: translateY(var(--lift-md));
+      box-shadow: var(--shadow-xl);
+      border-color: var(--color-gradient-purple-30);
+    }
+  }
+
+  .skill-category h3 {
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text);
+    margin: 0 0 var(--spacing-md) 0;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: var(--outline-width) solid transparent;
+    background:
+      linear-gradient(var(--color-bg-subtle), var(--color-bg-subtle))
+        padding-box,
+      linear-gradient(90deg, var(--color-accent), var(--color-gradient-purple))
+        border-box;
+  }
+
+  .skill-category h3::before {
+    content: '';
+    width: var(--icon-size-md);
+    height: var(--icon-size-md);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: var(--opacity-high);
+  }
+
+  /* Category icons using gradients */
+  .skill-category:nth-child(1) h3::before {
+    background: linear-gradient(
+      135deg,
+      var(--color-link),
+      var(--color-gradient-purple)
+    );
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M16 18l6-6-6-6'/%3E%3Cpath d='M8 6l-6 6 6 6'/%3E%3C/svg%3E")
+      center/contain no-repeat;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M16 18l6-6-6-6'/%3E%3Cpath d='M8 6l-6 6 6 6'/%3E%3C/svg%3E")
+      center/contain no-repeat;
+  }
+
+  .skill-category:nth-child(2) h3::before {
+    background: linear-gradient(
+      135deg,
+      var(--color-success),
+      var(--color-link)
+    );
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z'/%3E%3C/svg%3E")
+      center/contain no-repeat;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z'/%3E%3C/svg%3E")
+      center/contain no-repeat;
+  }
+
+  .skill-category:nth-child(3) h3::before {
+    background: linear-gradient(
+      135deg,
+      var(--color-warning),
+      var(--color-error)
+    );
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M22 11.08V12a10 10 0 1 1-5.93-9.14'/%3E%3Cpath d='M22 4L12 14.01l-3-3'/%3E%3C/svg%3E")
+      center/contain no-repeat;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M22 11.08V12a10 10 0 1 1-5.93-9.14'/%3E%3Cpath d='M22 4L12 14.01l-3-3'/%3E%3C/svg%3E")
+      center/contain no-repeat;
+  }
+
+  .skill-category:nth-child(4) h3::before {
+    background: linear-gradient(
+      135deg,
+      var(--color-gradient-purple),
+      var(--color-gradient-pink)
+    );
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/%3E%3C/svg%3E")
+      center/contain no-repeat;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/%3E%3C/svg%3E")
+      center/contain no-repeat;
+  }
+
+  .skill-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+  }
+
+  .skill-tag {
+    position: relative;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: linear-gradient(
+      135deg,
+      var(--color-accent-10),
+      var(--color-gradient-purple-10)
+    );
+    border: 1px solid var(--color-gradient-purple-20);
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-sm);
+    color: var(--color-text);
+    font-weight: var(--font-weight-medium);
+    transition: all var(--transition-base) cubic-bezier(0.22, 1, 0.36, 1);
+    cursor: default;
+    overflow: hidden;
+    letter-spacing: var(--letter-spacing-subtle);
+  }
+
+  .skill-tag::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--color-overlay-white-15),
+      transparent
+    );
+    transition: left var(--transition-slowest) cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  @media (hover: hover) {
+    .skill-tag:hover {
+      background: linear-gradient(
+        135deg,
+        var(--color-accent-20),
+        var(--color-gradient-purple-20)
+      );
+      border-color: var(--color-gradient-purple-40);
+      transform: translateY(var(--lift-subtle)) scale(1.05);
+      box-shadow:
+        0 4px 12px var(--color-accent-20),
+        0 0 20px var(--color-accent-15);
+    }
+
+    .skill-tag:hover::before {
+      left: 100%;
+    }
+  }
+
+  /* ===== REDUCED MOTION ===== */
+  @media (prefers-reduced-motion: reduce) {
+    .pulse {
+      animation: none;
+    }
+
+    .download-btn,
+    .download-btn::before,
+    .download-btn svg,
+    .email-btn,
+    .contact-row a,
+    .contact-row a svg,
+    .impact-item,
+    .impact-value,
+    .job,
+    .job::before,
+    .job h3,
+    .highlights li,
+    .highlights li::before,
+    .edu-item,
+    .edu-item h3,
+    .skill-category,
+    .skill-tag {
+      transition: none;
+    }
+
+    .skill-category {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+
+    .download-btn:hover svg {
+      animation: none;
+    }
+  }
+
+  /* ===== RESPONSIVE STYLES ===== */
+  @media (max-width: 640px) {
+    .resume-hero {
+      margin-bottom: var(--spacing-lg);
+      padding-bottom: var(--spacing-md);
+    }
+
+    .resume-hero .page-title {
+      font-size: var(--font-size-7xl);
+    }
+
+    .cta-group {
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .cta-group .download-btn,
+    .cta-group .email-btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .job-header,
+    .edu-item {
+      flex-direction: column;
+      gap: var(--spacing-xs);
+    }
+
+    .job-meta,
+    .edu-meta {
+      text-align: left;
+    }
+
+    .job {
+      padding: var(--spacing-md);
+    }
+
+    .skills-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .highlights li {
+      font-size: var(--font-size-md);
+    }
+  }
+
+  /* Extra small screens (iPhone SE 375px) */
+  @media (max-width: 400px) {
+    .resume-hero .page-title {
+      font-size: var(--font-size-6xl);
+    }
+
+    .impact-highlights {
+      grid-template-columns: 1fr;
+      gap: var(--spacing-sm);
+    }
+
+    .skill-category {
+      padding: var(--spacing-md);
+    }
+
+    .job-title {
+      font-size: var(--font-size-lg);
+    }
+  }
+</style>
+
+<script>
+  let resumeListenerRegistered = false;
+
+  function initShowMore() {
+    document
+      .querySelectorAll<HTMLButtonElement>('.show-more-btn')
+      .forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const job = btn.closest('.job');
+          if (!job) return;
+          const highlights = job.querySelector('.highlights');
+          if (!highlights) return;
+
+          const expanded = highlights.classList.toggle('expanded');
+          btn.setAttribute('aria-expanded', String(expanded));
+          const textEl = btn.querySelector('.show-more-text');
+          if (textEl) {
+            const collapsibleCount =
+              highlights.querySelectorAll('.collapsible').length;
+            textEl.textContent = expanded
+              ? 'Show less'
+              : `Show ${collapsibleCount} more`;
+          }
+        });
+      });
+  }
+
+  initShowMore();
+
+  if (!resumeListenerRegistered) {
+    resumeListenerRegistered = true;
+    document.addEventListener('astro:after-swap', initShowMore);
+  }
+</script>

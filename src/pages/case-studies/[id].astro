@@ -1,0 +1,56 @@
+---
+import { getCollection, render } from 'astro:content';
+import CaseStudyLayout from '../../layouts/CaseStudyLayout.astro';
+
+export async function getStaticPaths() {
+  const studies = await getCollection('case-studies');
+  const allPosts = await getCollection('writing', ({ data }) => !data.draft);
+
+  return studies.map((study) => {
+    // Find related studies based on shared tech or skills
+    const relatedStudies = studies
+      .filter((s) => s.id !== study.id)
+      .map((s) => {
+        let score = 0;
+        // Score based on shared tech
+        const studyTech = study.data.tech || [];
+        const sTech = s.data.tech || [];
+        const sharedTech = studyTech.filter((t: string) => sTech.includes(t));
+        score += sharedTech.length * 2;
+        // Score based on shared skills (higher weight)
+        const studySkills = study.data.skills || [];
+        const sSkills = s.data.skills || [];
+        const sharedSkills = studySkills.filter((sk) =>
+          sSkills.includes(sk as (typeof sSkills)[number])
+        );
+        score += sharedSkills.length * 3;
+        return { study: s, score };
+      })
+      .filter((item) => item.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3)
+      .map((item) => item.study);
+
+    // Find related writing articles that reference this case study
+    const relatedPosts = allPosts
+      .filter((post) => post.data.project === study.id)
+      .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+    return {
+      params: { id: study.id },
+      props: { study, relatedStudies, relatedPosts },
+    };
+  });
+}
+
+const { study, relatedStudies, relatedPosts } = Astro.props;
+const { Content } = await render(study);
+---
+
+<CaseStudyLayout
+  study={study}
+  relatedStudies={relatedStudies}
+  relatedPosts={relatedPosts}
+>
+  <Content />
+</CaseStudyLayout>

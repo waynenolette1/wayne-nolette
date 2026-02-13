@@ -1,0 +1,53 @@
+---
+import { getCollection, render } from 'astro:content';
+import PostLayout from '../../layouts/PostLayout.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('writing', ({ data }) => !data.draft);
+  const caseStudies = await getCollection('case-studies');
+
+  return posts.map((post) => {
+    // Find related posts based on shared tags or same project
+    const relatedPosts = posts
+      .filter((p) => p.id !== post.id)
+      .map((p) => {
+        let score = 0;
+        // Same project = high relevance
+        if (post.data.project && p.data.project === post.data.project) {
+          score += 5;
+        }
+        // Shared tags
+        const postTags = post.data.tags || [];
+        const pTags = p.data.tags || [];
+        const sharedTags = postTags.filter((t) => pTags.includes(t));
+        score += sharedTags.length * 2;
+        return { post: p, score };
+      })
+      .filter((item) => item.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3)
+      .map((item) => item.post);
+
+    // Find the linked case study if this post references one
+    const linkedCaseStudy = post.data.project
+      ? caseStudies.find((s) => s.id === post.data.project)
+      : undefined;
+
+    return {
+      params: { id: post.id },
+      props: { post, relatedPosts, linkedCaseStudy },
+    };
+  });
+}
+
+const { post, relatedPosts, linkedCaseStudy } = Astro.props;
+const { Content } = await render(post);
+---
+
+<PostLayout
+  post={post}
+  relatedPosts={relatedPosts}
+  linkedCaseStudy={linkedCaseStudy}
+>
+  <Content />
+</PostLayout>

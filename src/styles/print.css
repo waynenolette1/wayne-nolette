@@ -1,0 +1,459 @@
+/**
+ * Print stylesheet for optimized article printing.
+ * Hides navigation, adjusts typography, and ensures good print output.
+ */
+
+@media print {
+  /* ==========================================================================
+     Reset & Base
+     ========================================================================== */
+
+  *,
+  *::before,
+  *::after {
+    background: transparent !important;
+    /* Print requires pure black (#000) for maximum ink contrast and legibility */
+    color: #000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  html {
+    font-size: 12pt;
+  }
+
+  body {
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    line-height: 1.5;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* ==========================================================================
+     Hide Non-Essential Elements
+     ========================================================================== */
+
+  /* Navigation and UI */
+  header,
+  nav,
+  footer,
+  .search-trigger,
+  .search-dialog,
+  .scroll-top,
+  #scroll-top,
+  .back-to-top-prompt,
+  #back-to-top-prompt,
+  .scroll-progress-bar,
+  #scroll-progress-bar,
+  #reading-progress,
+  .skip-link,
+  .page-loader,
+  .loader-spinner,
+  .mobile-menu-backdrop,
+  .mobile-menu-panel {
+    display: none !important;
+  }
+
+  /* TOC and sidebars */
+  .toc,
+  #toc,
+  .mobile-toc-toggle,
+  .mobile-toc-panel,
+  .mobile-toc-backdrop,
+  aside {
+    display: none !important;
+  }
+
+  /* Interactive elements */
+  .code-copy-btn,
+  .share-buttons,
+  .share-section,
+  .native-share-btn,
+  .copy-link-btn,
+  button:not([type='submit']),
+  .shortcuts-overlay {
+    display: none !important;
+  }
+
+  /* Related content and navigation */
+  [data-nav='prev'],
+  [data-nav='next'],
+  .related-articles {
+    display: none !important;
+  }
+
+  /* Overlays and modals */
+  dialog,
+  [role='dialog'],
+  .lightbox,
+  .modal {
+    display: none !important;
+  }
+
+  /* ==========================================================================
+     Page Setup
+     ========================================================================== */
+
+  @page {
+    margin: 2cm 1.5cm;
+    size: A4;
+  }
+
+  @page :first {
+    margin-top: 3cm;
+  }
+
+  /* ==========================================================================
+     Typography
+     ========================================================================== */
+
+  h1 {
+    font-size: 24pt;
+    margin-top: 0;
+    margin-bottom: 12pt;
+    page-break-after: avoid;
+  }
+
+  h2 {
+    font-size: 18pt;
+    margin-top: 24pt;
+    margin-bottom: 8pt;
+    page-break-after: avoid;
+  }
+
+  h3 {
+    font-size: 14pt;
+    margin-top: 18pt;
+    margin-bottom: 6pt;
+    page-break-after: avoid;
+  }
+
+  h4,
+  h5,
+  h6 {
+    font-size: 12pt;
+    font-weight: bold;
+    margin-top: 12pt;
+    margin-bottom: 6pt;
+    page-break-after: avoid;
+  }
+
+  p {
+    margin: 0 0 12pt;
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* ==========================================================================
+     Article Content
+     ========================================================================== */
+
+  article {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .post-content,
+  .study-content,
+  .article-content {
+    max-width: 100% !important;
+  }
+
+  /* ==========================================================================
+     Links
+     ========================================================================== */
+
+  a {
+    text-decoration: underline;
+  }
+
+  /* Show URL after external links */
+  a[href^='http']::after,
+  a[href^='https']::after {
+    content: ' (' attr(href) ')';
+    font-size: 0.85em;
+    font-style: italic;
+    word-break: break-all;
+  }
+
+  /* Don't show URL for internal links */
+  a[href^='/']::after,
+  a[href^='#']::after,
+  a[href^='javascript']::after {
+    content: '';
+  }
+
+  /* Don't show URLs for buttons */
+  .btn a::after {
+    content: '';
+  }
+
+  /* Don't show URLs for links containing images - requires :has() support */
+  @supports selector(a:has(img)) {
+    a:has(img)::after,
+    a:has(svg)::after {
+      content: '';
+    }
+  }
+
+  /* ==========================================================================
+     Images
+     ========================================================================== */
+
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+    page-break-inside: avoid;
+    page-break-before: auto;
+  }
+
+  figure {
+    margin: 12pt 0;
+    page-break-inside: avoid;
+  }
+
+  figcaption {
+    font-size: 10pt;
+    font-style: italic;
+    text-align: center;
+    margin-top: 6pt;
+  }
+
+  /* ==========================================================================
+     Code Blocks
+     ========================================================================== */
+
+  pre,
+  code {
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: 9pt !important;
+  }
+
+  pre {
+    /* Light gray background for print readability - standard print convention */
+    background: #f5f5f5 !important;
+    /* Light border for print - needs to be visible on white paper */
+    border: 1px solid #ddd !important;
+    border-radius: 4pt;
+    padding: 8pt !important;
+    margin: 12pt 0 !important;
+    overflow-x: visible !important;
+    white-space: pre-wrap !important;
+    word-wrap: break-word !important;
+    page-break-inside: avoid;
+  }
+
+  code {
+    /* Light gray background for print readability - standard print convention */
+    background: #f5f5f5 !important;
+    padding: 1pt 3pt !important;
+    border-radius: 2pt;
+  }
+
+  /* Reset code inside pre */
+  pre code {
+    background: transparent !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+
+  /* ==========================================================================
+     Tables
+     ========================================================================== */
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12pt 0;
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  th,
+  td {
+    /* Pure black border for maximum print visibility */
+    border: 1pt solid #000;
+    padding: 6pt 8pt;
+    text-align: left;
+  }
+
+  th {
+    font-weight: bold;
+    /* Light gray for table headers - standard print convention for visual hierarchy */
+    background: #f0f0f0 !important;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  /* ==========================================================================
+     Lists
+     ========================================================================== */
+
+  ul,
+  ol {
+    margin: 12pt 0;
+    padding-left: 24pt;
+  }
+
+  li {
+    margin-bottom: 4pt;
+  }
+
+  /* ==========================================================================
+     Blockquotes
+     ========================================================================== */
+
+  blockquote {
+    margin: 12pt 0;
+    padding: 0 0 0 12pt;
+    /* Pure black border for maximum print visibility */
+    border-left: 3pt solid #000;
+    font-style: italic;
+    page-break-inside: avoid;
+  }
+
+  /* ==========================================================================
+     Meta Information
+     ========================================================================== */
+
+  .post-meta,
+  .study-meta {
+    font-size: 10pt;
+    /* Medium gray for secondary text - provides visual hierarchy while maintaining readability */
+    color: #666 !important;
+    margin-bottom: 24pt;
+    /* Light gray border for subtle separation */
+    border-bottom: 1pt solid #ccc;
+    padding-bottom: 12pt;
+  }
+
+  .post-meta time,
+  .reading-time {
+    display: inline;
+  }
+
+  /* Tags */
+  .tags,
+  .post-tags {
+    margin-top: 24pt;
+    padding-top: 12pt;
+    /* Light gray border for subtle separation */
+    border-top: 1pt solid #ccc;
+    font-size: 10pt;
+  }
+
+  .tag {
+    display: inline;
+    margin-right: 6pt;
+  }
+
+  .tag::before {
+    content: '#';
+  }
+
+  /* ==========================================================================
+     Stats and Metrics (Case Studies)
+     ========================================================================== */
+
+  .stat-value {
+    font-size: 18pt;
+    font-weight: bold;
+  }
+
+  .stat-label,
+  .metric-label {
+    font-size: 10pt;
+  }
+
+  /* ==========================================================================
+     Diagrams (Mermaid)
+     ========================================================================== */
+
+  .mermaid {
+    page-break-inside: avoid;
+  }
+
+  .mermaid svg {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* ==========================================================================
+     Info Boxes (TL;DR / Article Info)
+     ========================================================================== */
+
+  .info-box {
+    margin: 12pt 0;
+    padding: 8pt 12pt;
+    border: 1pt solid #000;
+    border-left: 3pt solid #000 !important;
+    border-radius: 4pt;
+    background: #f5f5f5 !important;
+    page-break-inside: avoid;
+  }
+
+  .info-box-label {
+    font-size: 10pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 6pt;
+    color: #000 !important;
+  }
+
+  .info-box-meta {
+    font-size: 9pt;
+    margin-bottom: 4pt;
+  }
+
+  /* ==========================================================================
+     Metrics Hero (Case Studies)
+     ========================================================================== */
+
+  .metrics-hero {
+    margin: 12pt 0 24pt;
+    padding: 12pt 0;
+    border-top: 2pt solid #000;
+    border-bottom: 2pt solid #000;
+    text-align: center;
+    page-break-inside: avoid;
+  }
+
+  .metric-primary {
+    display: block;
+    font-size: 20pt;
+    font-weight: bold;
+    margin-bottom: 6pt;
+    color: #000 !important;
+    background: none !important;
+    -webkit-text-fill-color: #000 !important;
+  }
+
+  .metric-secondary {
+    display: block;
+    font-size: 14pt;
+    color: #333 !important;
+  }
+
+  /* ==========================================================================
+     Footer for Printed Pages
+     ========================================================================== */
+
+  /* Add source URL at the end */
+  article::after {
+    content: 'Source: ' attr(data-url);
+    display: block;
+    margin-top: 24pt;
+    padding-top: 12pt;
+    /* Light gray border for subtle separation */
+    border-top: 1pt solid #ccc;
+    font-size: 9pt;
+    font-style: italic;
+  }
+}

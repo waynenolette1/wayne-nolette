@@ -1,0 +1,711 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Page Not Found" noindex={true}>
+  <div class="error-page">
+    <!-- Animated background particles -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Glitch effect on 404 -->
+    <div class="error-code-wrapper">
+      <div class="error-code" data-text="404">404</div>
+      <div class="error-glow"></div>
+    </div>
+
+    <h1 class="error-title">Page Not Found</h1>
+    <p class="error-message">
+      The page you're looking for doesn't exist or has been moved.
+    </p>
+
+    <div class="error-actions">
+      <a href={`${import.meta.env.BASE_URL}`} class="primary-btn">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        Back to Home
+      </a>
+      <a
+        href={`${import.meta.env.BASE_URL}case-studies/`}
+        class="secondary-btn"
+      >
+        View Case Studies
+      </a>
+    </div>
+
+    <div class="quick-links">
+      <p>Or try one of these:</p>
+      <div class="links">
+        <a href={`${import.meta.env.BASE_URL}writing/`}>Writing</a>
+        <a href={`${import.meta.env.BASE_URL}resume/`}>Resume</a>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .error-page {
+    text-align: center;
+    padding: var(--spacing-2xl) 0;
+    max-width: 600px;
+    margin: 0 auto;
+    position: relative;
+    min-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Animated particles background */
+  .particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .particles :global(.particle) {
+    position: absolute;
+    width: var(--border-highlight);
+    height: var(--border-highlight);
+    background: var(--color-accent);
+    border-radius: var(--radius-full);
+    opacity: 0;
+    animation: particleFloat var(--animation-float) ease-in-out infinite;
+  }
+
+  @keyframes particleFloat {
+    0% {
+      opacity: 0;
+      transform: translateY(100%) scale(0);
+    }
+    10% {
+      opacity: var(--opacity-muted);
+    }
+    90% {
+      opacity: var(--opacity-muted);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-100vh) scale(1);
+    }
+  }
+
+  /* Error code with glitch effect */
+  .error-code-wrapper {
+    position: relative;
+    z-index: 1;
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .error-code {
+    font-size: clamp(6rem, 20vw, 10rem);
+    font-weight: var(--font-weight-extrabold);
+    line-height: var(--line-height-none);
+    background: linear-gradient(
+      135deg,
+      var(--color-accent) 0%,
+      var(--color-gradient-purple) 50%,
+      var(--color-gradient-pink) 100%
+    );
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation:
+      gradientShift var(--animation-gradient-slow) ease infinite,
+      float var(--animation-gradient) ease-in-out infinite;
+    position: relative;
+    text-shadow: 0 0 40px var(--color-accent-35);
+  }
+
+  /* Glitch effect layers */
+  .error-code::before,
+  .error-code::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      135deg,
+      var(--color-accent) 0%,
+      var(--color-gradient-purple) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .error-code::before {
+    animation: glitchTop var(--animation-gradient) ease-in-out infinite;
+    clip-path: polygon(0 0, 100% 0, 100% 33%, 0 33%);
+  }
+
+  .error-code::after {
+    animation: glitchBottom var(--animation-glitch) ease-in-out infinite;
+    clip-path: polygon(0 67%, 100% 67%, 100% 100%, 0 100%);
+  }
+
+  @keyframes glitchTop {
+    0%,
+    100% {
+      transform: translate(0);
+    }
+    20% {
+      transform: translate(
+        calc(-1 * var(--translate-2xs)),
+        calc(-1 * var(--translate-3xs))
+      );
+    }
+    40% {
+      transform: translate(var(--translate-2xs), var(--translate-3xs));
+    }
+    60% {
+      transform: translate(
+        calc(-1 * var(--translate-3xs)),
+        var(--translate-4xs)
+      );
+    }
+    80% {
+      transform: translate(
+        var(--translate-3xs),
+        calc(-1 * var(--translate-4xs))
+      );
+    }
+  }
+
+  @keyframes glitchBottom {
+    0%,
+    100% {
+      transform: translate(0);
+    }
+    25% {
+      transform: translate(var(--translate-2xs), var(--translate-4xs));
+    }
+    50% {
+      transform: translate(
+        calc(-1 * var(--translate-2xs)),
+        calc(-1 * var(--translate-4xs))
+      );
+    }
+    75% {
+      transform: translate(var(--translate-3xs), var(--translate-3xs));
+    }
+  }
+
+  /* Glow effect behind 404 */
+  .error-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /* Responsive sizing for different screen sizes */
+    width: clamp(200px, 70vw, 300px);
+    height: clamp(200px, 70vw, 300px);
+    background: radial-gradient(
+      circle,
+      var(--color-accent-20) 0%,
+      var(--color-gradient-purple-10) 40%,
+      transparent 70%
+    );
+    border-radius: var(--radius-full);
+    filter: blur(var(--blur-2xl));
+    animation: pulseGlow var(--animation-gradient-slow) ease-in-out infinite;
+    z-index: -1;
+  }
+
+  @keyframes pulseGlow {
+    0%,
+    100% {
+      opacity: var(--opacity-muted);
+      transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.2);
+    }
+  }
+
+  .error-title {
+    font-size: var(--font-size-8xl);
+    margin: 0 0 var(--spacing-md) 0;
+    position: relative;
+    z-index: 1;
+    animation: fadeInUp var(--animation-fade-in-slow) ease-out var(--delay-2)
+      both;
+  }
+
+  .error-message {
+    color: var(--color-text-muted);
+    margin-bottom: var(--spacing-xl);
+    font-size: var(--font-size-2xl);
+    position: relative;
+    z-index: 1;
+    animation: fadeInUp var(--animation-fade-in-slow) ease-out var(--delay-3)
+      both;
+    line-height: var(--line-height-relaxed);
+    letter-spacing: var(--letter-spacing-slight);
+  }
+
+  .error-actions {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-2xl);
+    position: relative;
+    z-index: 1;
+    animation: fadeInUp var(--animation-fade-in-slow) ease-out var(--delay-4)
+      both;
+  }
+
+  .primary-btn,
+  .secondary-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: var(--radius-md);
+    font-weight: var(--font-weight-semibold);
+    text-decoration: none;
+    transition: all var(--transition-bounce);
+    position: relative;
+    overflow: hidden;
+    letter-spacing: var(--letter-spacing-subtle);
+  }
+
+  .primary-btn {
+    background: linear-gradient(
+      135deg,
+      var(--color-accent) 0%,
+      var(--color-link-hover) 50%,
+      var(--color-gradient-purple) 100%
+    );
+    background-size: 200% 200%;
+    color: var(--color-btn-text);
+    min-height: var(--touch-target);
+    box-shadow:
+      0 4px 14px 0 var(--color-accent-35),
+      0 0 20px var(--color-accent-20);
+  }
+
+  /* Premium glow effect behind primary button */
+  .primary-btn::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: calc(var(--radius-md) + 6px);
+    background: radial-gradient(
+      ellipse at center,
+      var(--color-accent-50) 0%,
+      var(--color-gradient-purple-30) 50%,
+      transparent 70%
+    );
+    opacity: 0;
+    filter: blur(var(--blur-2xl));
+    z-index: -1;
+    transition: opacity var(--transition-slow) cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .primary-btn svg {
+    transition: transform var(--transition-bounce);
+  }
+
+  /* Shimmer effect on primary button */
+  .primary-btn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--color-overlay-white-20),
+      transparent
+    );
+    transition: left var(--transition-slowest);
+  }
+
+  .primary-btn:focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  @media (hover: hover) {
+    .primary-btn:hover::before {
+      opacity: 1;
+    }
+
+    .primary-btn:hover::after {
+      left: 100%;
+    }
+
+    .primary-btn:hover {
+      transform: translateY(var(--lift-sm));
+      box-shadow:
+        0 8px 25px 0 var(--color-accent-50),
+        0 0 30px var(--color-accent-35);
+      text-decoration: none;
+      color: var(--color-btn-text);
+      background-position: 100% 100%;
+    }
+
+    .primary-btn:hover svg {
+      transform: scale(1.15);
+    }
+  }
+
+  .secondary-btn {
+    background: var(--color-accent-5);
+    backdrop-filter: blur(var(--blur-xs));
+    -webkit-backdrop-filter: blur(var(--blur-xs));
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    min-height: var(--touch-target);
+  }
+
+  /* Glow effect behind secondary button */
+  .secondary-btn::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: calc(var(--radius-md) + 4px);
+    background: radial-gradient(
+      ellipse at center,
+      var(--color-accent-25) 0%,
+      var(--color-gradient-purple-15) 50%,
+      transparent 70%
+    );
+    opacity: 0;
+    filter: blur(var(--blur-lg));
+    z-index: -1;
+    transition: opacity var(--transition-slow) cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* Animated border for secondary button */
+  .secondary-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, transparent, transparent);
+    -webkit-mask:
+      linear-gradient(var(--color-mask-white) 0 0) content-box,
+      linear-gradient(var(--color-mask-white) 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity var(--transition-slow);
+  }
+
+  .secondary-btn:focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  @media (hover: hover) {
+    .secondary-btn:hover {
+      border-color: transparent;
+      color: var(--color-link);
+      text-decoration: none;
+      transform: translateY(var(--lift-sm));
+    }
+
+    .secondary-btn:hover::before {
+      opacity: 1;
+      background: linear-gradient(
+        135deg,
+        var(--color-accent),
+        var(--color-gradient-purple)
+      );
+    }
+
+    .secondary-btn:hover::after {
+      opacity: 1;
+    }
+  }
+
+  .quick-links {
+    padding-top: var(--spacing-xl);
+    border-top: 1px solid var(--color-border-subtle);
+    position: relative;
+    z-index: 1;
+    animation: fadeInUp var(--animation-fade-in-slow) ease-out var(--delay-5)
+      both;
+  }
+
+  .quick-links p {
+    font-size: var(--font-size-md);
+    color: var(--color-text-subtle);
+    margin-bottom: var(--spacing-md);
+    letter-spacing: var(--letter-spacing-subtle);
+  }
+
+  .links {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-lg);
+  }
+
+  .links a {
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-muted);
+    padding: var(--spacing-sm) var(--spacing-md);
+    min-height: var(--touch-target);
+    display: inline-flex;
+    align-items: center;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-base);
+    position: relative;
+    letter-spacing: var(--letter-spacing-subtle);
+  }
+
+  /* Glow effect behind quick links */
+  .links a::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: calc(var(--radius-md) + 4px);
+    background: radial-gradient(
+      ellipse at center,
+      var(--color-accent-25) 0%,
+      var(--color-gradient-purple-15) 50%,
+      transparent 70%
+    );
+    opacity: 0;
+    filter: blur(var(--blur-md));
+    z-index: -1;
+    transition: opacity var(--transition-slow) cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .links a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      var(--color-accent),
+      var(--color-gradient-purple)
+    );
+    transition: all var(--transition-slow);
+    transform: translateX(-50%);
+  }
+
+  .links a:focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  @media (hover: hover) {
+    .links a:hover {
+      color: var(--color-link);
+      text-decoration: none;
+      transform: translateY(var(--lift-sm));
+    }
+
+    .links a:hover::before {
+      opacity: 1;
+    }
+
+    .links a:hover::after {
+      width: 80%;
+    }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(var(--translate-md));
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Mobile adjustments */
+  @media (max-width: 640px) {
+    .error-page {
+      padding: var(--spacing-xl) var(--spacing-md);
+    }
+
+    .error-title {
+      font-size: var(--font-size-6xl);
+    }
+
+    .error-message {
+      font-size: var(--font-size-xl);
+    }
+
+    .error-actions {
+      width: 100%;
+    }
+
+    .primary-btn,
+    .secondary-btn {
+      flex: 1;
+      justify-content: center;
+    }
+
+    .links {
+      gap: var(--spacing-sm);
+    }
+  }
+
+  /* Extra small screens (iPhone SE 375px) */
+  @media (max-width: 400px) {
+    .error-title {
+      font-size: var(--font-size-4xl);
+    }
+
+    .error-message {
+      font-size: var(--font-size-lg);
+    }
+
+    .quick-links p {
+      font-size: var(--font-size-sm);
+    }
+
+    .links a {
+      font-size: var(--font-size-sm);
+      padding: var(--spacing-xs) var(--spacing-sm);
+    }
+  }
+
+  /* Respect reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .error-code,
+    .error-code::before,
+    .error-code::after {
+      animation: none;
+    }
+
+    .error-glow {
+      animation: none;
+    }
+
+    .particles :global(.particle) {
+      animation: none;
+      display: none;
+    }
+
+    .error-title,
+    .error-message,
+    .error-actions,
+    .quick-links {
+      animation: none;
+      opacity: 1;
+    }
+
+    .primary-btn,
+    .secondary-btn,
+    .links a,
+    .primary-btn::after,
+    .secondary-btn::before,
+    .links a::after {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  // Guard to prevent listener stacking on View Transitions
+  let error404ListenerRegistered = false;
+
+  function createParticles() {
+    const container = document.getElementById('particles');
+    if (!container) return;
+
+    // Clear existing particles
+    container.innerHTML = '';
+
+    // Check for reduced motion preference
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+
+    const particleCount = 30;
+
+    for (let i = 0; i < particleCount; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+
+      // Random position
+      particle.style.left = `${Math.random() * 100}%`;
+
+      // Random size
+      const size = Math.random() * 4 + 2;
+      particle.style.width = `${size}px`;
+      particle.style.height = `${size}px`;
+
+      // Random color from gradient palette
+      const colors = [
+        'var(--color-accent)',
+        'var(--color-gradient-purple)',
+        'var(--color-gradient-pink)',
+        'var(--color-gradient-cyan)',
+      ];
+      particle.style.background =
+        colors[Math.floor(Math.random() * colors.length)];
+
+      // Random animation delay and duration
+      particle.style.animationDelay = `${Math.random() * 8}s`;
+      particle.style.animationDuration = `${Math.random() * 4 + 6}s`;
+
+      // Random opacity
+      particle.style.setProperty(
+        '--max-opacity',
+        `${Math.random() * 0.5 + 0.3}`
+      );
+
+      container.appendChild(particle);
+    }
+  }
+
+  function cleanup() {
+    const container = document.getElementById('particles');
+    if (container) {
+      container.innerHTML = '';
+    }
+  }
+
+  // Initialize
+  createParticles();
+
+  // Re-init after View Transitions (with guard to prevent listener stacking)
+  if (!error404ListenerRegistered) {
+    error404ListenerRegistered = true;
+    document.addEventListener('astro:before-swap', cleanup);
+    document.addEventListener('astro:after-swap', createParticles);
+  }
+
+  // Track 404 errors with Plausible analytics
+  // This sends a custom event so 404s can be identified in the dashboard
+  // The original URL is captured as a property for debugging
+  if (typeof window.plausible === 'function') {
+    window.plausible('404', { props: { path: window.location.pathname } });
+  }
+</script>

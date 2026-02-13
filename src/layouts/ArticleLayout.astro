@@ -1,0 +1,847 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import { SITE_CONFIG } from '../config/constants';
+import { ARTICLE_LAYOUT_SCRIPT } from '../utils/article-features';
+
+/**
+ * Unified article layout for Writing, Case Studies, and ADRs.
+ * Uses named slots for type-specific header content and footer customization.
+ *
+ * Slots:
+ * - header-badges: Badges shown above the title (status badge, confidence, etc.)
+ * - header-meta: Meta row after description (date, reading time, deciders, etc.)
+ * - header-tags: Tag list after meta
+ * - header-extra: Extra content after tags (TL;DR box, tech stack, etc.)
+ * - footer-extra: Extra footer content before CTA (share section, etc.)
+ * - related: Related articles section
+ * - default: Main article content
+ */
+interface Props {
+  /** Page title */
+  title: string;
+  /** Page description */
+  description?: string;
+  /** Back link URL */
+  backUrl: string;
+  /** Back link text */
+  backText: string;
+  /** Footer CTA text */
+  ctaText?: string;
+  /** Footer nav links: [{ url, text, direction: 'left' | 'right' }] */
+  footerLinks?: Array<{
+    url: string;
+    text: string;
+    direction: 'left' | 'right';
+  }>;
+  /** OpenGraph type */
+  ogType?: 'website' | 'article';
+  /** Published time for articles */
+  publishedTime?: string;
+  /** Breadcrumb schema for SEO */
+  breadcrumbSchema?: object | null;
+  /** CSS class for header element */
+  headerClass?: string;
+  /** CSS class for content element */
+  contentClass?: string;
+  /** Content element ID for TOC script */
+  contentId?: string;
+}
+
+const {
+  title,
+  description,
+  backUrl,
+  backText,
+  ctaText = 'Questions or thoughts?',
+  footerLinks = [],
+  ogType = 'article',
+  publishedTime,
+  breadcrumbSchema,
+  headerClass = 'article-header',
+  contentClass = 'article-content',
+  contentId = 'article-content',
+} = Astro.props;
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  ogType={ogType}
+  publishedTime={publishedTime}
+  breadcrumbSchema={breadcrumbSchema}
+>
+  <div class="reading-progress-bar" id="reading-progress"></div>
+  <article data-url={new URL(Astro.url.pathname, Astro.site).toString()}>
+    <header
+      class:list={[
+        'article-header',
+        headerClass !== 'article-header' && headerClass,
+      ]}
+    >
+      <a href={backUrl} class="back-link">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="M19 12H5M12 19l-7-7 7-7"></path>
+        </svg>
+        {backText}
+      </a>
+
+      <slot name="header-badges" />
+
+      <h1>{title}</h1>
+
+      {description && <p class="description">{description}</p>}
+
+      <slot name="header-extra" />
+    </header>
+
+    <aside class="content-disclaimer" aria-label="Content disclaimer">
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        aria-hidden="true"
+      >
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <span>
+        Technical details have been generalized to protect proprietary
+        information.
+      </span>
+    </aside>
+
+    <!-- Mobile TOC Toggle -->
+    <button
+      class="mobile-toc-toggle"
+      id="mobile-toc-toggle"
+      aria-label="Table of contents"
+      aria-expanded="false"
+      aria-controls="mobile-toc-panel"
+    >
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        aria-hidden="true"
+      >
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="12" x2="15" y2="12"></line>
+        <line x1="3" y1="18" x2="18" y2="18"></line>
+      </svg>
+      <span>Contents</span>
+    </button>
+
+    <!-- Mobile TOC Panel -->
+    <div class="mobile-toc-backdrop" id="mobile-toc-backdrop"></div>
+    <aside
+      class="mobile-toc-panel"
+      id="mobile-toc-panel"
+      aria-label="Table of contents"
+    >
+      <div class="mobile-toc-header">
+        <span>Contents</span>
+        <button
+          class="mobile-toc-close"
+          id="mobile-toc-close"
+          aria-label="Close table of contents"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <nav class="mobile-toc-nav" id="mobile-toc-nav">
+        <!-- Mobile TOC items will be generated by JavaScript -->
+      </nav>
+    </aside>
+
+    <div class="content-wrapper">
+      <aside class="table-of-contents" id="toc">
+        <div class="toc-header">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="15" y2="12"></line>
+            <line x1="3" y1="18" x2="18" y2="18"></line>
+          </svg>
+          <span>Contents</span>
+        </div>
+        <nav class="toc-nav" id="toc-nav">
+          <!-- TOC items will be generated by JavaScript -->
+        </nav>
+      </aside>
+      <div
+        class:list={[
+          'article-content',
+          contentClass !== 'article-content' && contentClass,
+        ]}
+        id={contentId}
+      >
+        <slot />
+      </div>
+    </div>
+
+    <slot name="related" />
+
+    <footer class="article-footer">
+      <slot name="footer-extra" />
+      <div class="footer-cta">
+        <p>{ctaText}</p>
+        <a href={`mailto:${SITE_CONFIG.email}`} class="contact-btn">
+          Get in Touch
+        </a>
+      </div>
+      <div class="footer-nav">
+        {
+          footerLinks.map((link) =>
+            link.direction === 'left' ? (
+              <a href={link.url} class="nav-link" data-nav="prev">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+                {link.text}
+              </a>
+            ) : (
+              <a href={link.url} class="nav-link" data-nav="next">
+                {link.text}
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </a>
+            )
+          )
+        }
+      </div>
+    </footer>
+  </article>
+</BaseLayout>
+
+<style>
+  article {
+    max-width: 100%;
+  }
+
+  /* ===== BACK LINK ===== */
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-subtle);
+    margin-bottom: var(--spacing-sm);
+    transition: color var(--transition-fast);
+    font-weight: var(--font-weight-medium);
+    letter-spacing: var(--letter-spacing-relaxed);
+    text-transform: uppercase;
+    min-height: var(--touch-target);
+  }
+
+  .back-link svg {
+    transition: transform var(--transition-bounce);
+  }
+
+  @media (hover: hover) {
+    .back-link:hover {
+      color: var(--color-link);
+      text-decoration: none;
+    }
+
+    .back-link:hover svg {
+      transform: translateX(calc(-1 * var(--translate-xs)));
+    }
+  }
+
+  .back-link:focus-visible {
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: 2px;
+    color: var(--color-link);
+  }
+
+  /* ===== HEADER ===== */
+  .article-header {
+    margin-bottom: var(--spacing-2xl);
+    padding-bottom: var(--spacing-xl);
+    border-bottom: 1px solid var(--color-border);
+    position: relative;
+  }
+
+  .article-header::before {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: var(--header-accent-width);
+    height: var(--border-accent);
+    background: linear-gradient(
+      90deg,
+      var(--color-accent),
+      var(--color-gradient-purple)
+    );
+    border-radius: var(--radius-2xs);
+  }
+
+  .article-header h1 {
+    margin-bottom: var(--spacing-sm);
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 5vw, var(--font-size-8xl));
+    font-weight: var(--font-weight-normal);
+    letter-spacing: -0.02em;
+    line-height: var(--line-height-tight);
+    background: linear-gradient(
+      135deg,
+      var(--color-text) 0%,
+      var(--color-text-muted) 50%,
+      var(--color-accent) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .description {
+    font-size: var(--font-size-4xl);
+    color: var(--color-text-muted);
+    line-height: var(--line-height-prose);
+    letter-spacing: var(--letter-spacing-compact);
+    margin-bottom: var(--spacing-lg);
+    max-width: var(--content-max-width);
+    font-weight: var(--font-weight-normal);
+  }
+
+  /* ===== CONTENT ===== */
+  .article-content {
+    line-height: var(--line-height-prose);
+    font-size: var(--font-size-xl);
+    color: var(--color-text);
+    letter-spacing: var(--letter-spacing-slight);
+    order: 1;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 500px;
+    /* Constrain reading width for optimal measure (65-80 chars) */
+    max-width: var(--content-max-width);
+  }
+
+  /* Headings - clear hierarchy with comfortable breathing room */
+  .article-content :global(h2) {
+    margin-top: 4rem;
+    margin-bottom: var(--spacing-md);
+    font-family: var(--font-display);
+    font-size: var(--font-size-7xl);
+    font-weight: var(--font-weight-normal);
+    letter-spacing: -0.01em;
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--color-border-subtle);
+    position: relative;
+    /* Subtle gradient text for premium feel */
+    background: linear-gradient(
+      135deg,
+      var(--color-text) 0%,
+      var(--color-text-muted) 60%,
+      var(--color-accent) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Gradient accent line on section borders */
+  .article-content :global(h2::before) {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 0;
+    width: clamp(60px, 12vw, 100px);
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      var(--color-accent),
+      var(--color-gradient-purple)
+    );
+    border-radius: var(--radius-full);
+  }
+
+  .article-content :global(h2:first-child) {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+
+  .article-content :global(h2:first-child::before) {
+    display: none;
+  }
+
+  .article-content :global(h3) {
+    margin-top: 3rem;
+    margin-bottom: var(--spacing-md);
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--letter-spacing-snug);
+    color: var(--color-text);
+    padding-left: var(--spacing-md);
+    border-left: 3px solid var(--color-accent-30);
+  }
+
+  .article-content :global(h4) {
+    margin-top: 2.5rem;
+    margin-bottom: var(--spacing-sm);
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--letter-spacing-compact);
+    color: var(--color-text-muted);
+  }
+
+  /* Paragraphs - comfortable reading rhythm */
+  .article-content :global(p) {
+    margin-bottom: var(--spacing-lg);
+  }
+
+  /* Lead paragraph - slightly larger, emphasized */
+  .article-content :global(p:first-of-type) {
+    font-size: var(--font-size-2xl);
+    color: var(--color-text);
+    line-height: var(--line-height-loose);
+  }
+
+  /* Lists - clear visual grouping with breathing room */
+  .article-content :global(ul),
+  .article-content :global(ol) {
+    margin-bottom: var(--spacing-lg);
+    padding-left: var(--spacing-lg);
+  }
+
+  .article-content :global(li) {
+    margin-bottom: var(--spacing-sm);
+    padding-left: var(--spacing-xs);
+    letter-spacing: var(--letter-spacing-slight);
+  }
+
+  /* Nested lists - tighter spacing */
+  .article-content :global(li ul),
+  .article-content :global(li ol) {
+    margin-top: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .article-content :global(li)::marker {
+    color: var(--color-accent);
+    font-weight: var(--font-weight-medium);
+  }
+
+  /* Images - constrain to content width */
+  .article-content :global(img) {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-lg);
+  }
+
+  /* Strong - accent-tinted for emphasis, makes key numbers pop when scanning */
+  .article-content :global(strong) {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-link-hover);
+    letter-spacing: var(--letter-spacing-snug);
+  }
+
+  /* Horizontal rules - subtle section breaks */
+  .article-content :global(hr) {
+    margin: 3rem 0;
+    border: none;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--color-border-hover) 20%,
+      var(--color-accent-25) 50%,
+      var(--color-border-hover) 80%,
+      transparent
+    );
+  }
+
+  /* Links - obvious, accessible, not distracting */
+  .article-content :global(a) {
+    color: var(--color-link);
+    text-decoration: underline;
+    text-decoration-color: var(--color-accent-40);
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+    transition: all var(--transition-fast);
+  }
+
+  @media (hover: hover) {
+    .article-content :global(a:hover) {
+      color: var(--color-link-hover);
+      text-decoration-color: var(--color-link-hover);
+      text-decoration-thickness: 2px;
+    }
+  }
+
+  .article-content :global(a:focus-visible) {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-xs);
+  }
+
+  /* Blockquotes - calm, distinguished callouts */
+  .article-content :global(blockquote) {
+    margin: var(--spacing-lg) 0;
+    padding: var(--spacing-lg) var(--spacing-xl);
+    background: linear-gradient(
+      135deg,
+      var(--color-accent-5) 0%,
+      var(--color-gradient-purple-5) 100%
+    );
+    border-left: 4px solid;
+    border-image: linear-gradient(
+        180deg,
+        var(--color-accent),
+        var(--color-gradient-purple)
+      )
+      1;
+    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+    font-style: italic;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-lg);
+    letter-spacing: var(--letter-spacing-slight);
+  }
+
+  .article-content :global(blockquote p) {
+    margin-bottom: 0;
+    font-size: inherit;
+  }
+
+  /* Inline code - distinct but not visually noisy */
+  .article-content :global(code:not(pre code)) {
+    font-size: 0.9em;
+    padding: 0.15em 0.4em;
+    background: var(--color-code-bg);
+    border: 1px solid var(--color-code-border);
+    border-radius: var(--radius-sm);
+    font-weight: var(--font-weight-normal);
+    /* Prevent long inline code from breaking layout */
+    word-break: break-word;
+  }
+
+  /* Code blocks - premium styling with comfortable padding */
+  .article-content :global(pre) {
+    position: relative;
+    margin: var(--spacing-lg) 0;
+    padding: var(--spacing-lg);
+    padding-top: calc(var(--spacing-lg) + 2px);
+    background: var(--color-code-bg);
+    border: 1px solid var(--color-code-border);
+    border-radius: var(--radius-xl);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    /* Subtle inner shadow for depth */
+    box-shadow: inset 0 1px 3px var(--color-overlay-black-10);
+  }
+
+  /* Gradient accent top border on code blocks */
+  .article-content :global(pre::before) {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      var(--color-accent),
+      var(--color-gradient-purple),
+      var(--color-gradient-pink)
+    );
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    z-index: 1;
+  }
+
+  .article-content :global(pre code) {
+    padding: 0;
+    background: none;
+    border: none;
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-relaxed);
+  }
+
+  /* Code copy button - premium styling */
+  .article-content :global(.code-copy-btn) {
+    position: absolute;
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    opacity: 0.5;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    min-height: 32px;
+  }
+
+  /* Always show on touch devices since hover isn't reliable */
+  @media (pointer: coarse) {
+    .article-content :global(.code-copy-btn) {
+      opacity: var(--opacity-medium);
+    }
+  }
+
+  @media (hover: hover) {
+    .article-content :global(pre:hover .code-copy-btn) {
+      opacity: 1;
+    }
+
+    .article-content :global(.code-copy-btn:hover) {
+      background: var(--color-bg);
+      color: var(--color-link);
+      border-color: var(--color-link);
+      transform: translateY(calc(-1 * var(--translate-4xs)));
+      box-shadow: 0 2px 8px var(--color-accent-15);
+    }
+  }
+
+  .article-content :global(.code-copy-btn:focus-visible) {
+    opacity: 1;
+    outline: var(--outline-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .article-content :global(.code-copy-btn.copied) {
+    background: linear-gradient(
+      135deg,
+      var(--color-success-15) 0%,
+      var(--color-success-05) 100%
+    );
+    color: var(--color-success);
+    border-color: var(--color-success-30);
+    box-shadow: 0 2px 8px var(--color-success-15);
+  }
+
+  .article-content :global(.code-copy-btn svg) {
+    transition: transform var(--transition-fast);
+  }
+
+  .article-content :global(.code-copy-btn:active svg) {
+    transform: scale(0.9);
+  }
+
+  /* Table styling - generous spacing, clear hierarchy */
+  .article-content :global(.table-scroll) {
+    margin: var(--spacing-2xl) 0;
+  }
+
+  .article-content :global(table) {
+    font-size: var(--font-size-md);
+    line-height: var(--line-height-relaxed);
+  }
+
+  .article-content :global(th) {
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: var(--font-size-sm);
+    background: linear-gradient(
+      135deg,
+      var(--color-accent-08) 0%,
+      var(--color-gradient-purple-06) 100%
+    );
+    color: var(--color-text);
+    border-bottom: 2px solid var(--color-accent-20);
+  }
+
+  .article-content :global(td) {
+    padding: var(--spacing-md) var(--spacing-lg);
+    transition: background var(--transition-fast);
+  }
+
+  .article-content :global(tr:last-child td) {
+    border-bottom: none;
+  }
+
+  @media (hover: hover) {
+    .article-content :global(tr:hover td) {
+      background: var(--color-accent-5);
+    }
+  }
+
+  /* ===== FOOTER ===== */
+  .article-footer {
+    margin-top: var(--spacing-3xl);
+    padding-top: var(--spacing-xl);
+    border-top: none;
+    position: relative;
+  }
+
+  .article-footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--color-accent-30) 20%,
+      var(--color-gradient-purple-20) 80%,
+      transparent
+    );
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 640px) {
+    .article-header h1 {
+      font-size: var(--font-size-7xl);
+    }
+
+    .description {
+      font-size: var(--font-size-xl);
+    }
+
+    .article-content {
+      width: 100%;
+      max-width: 100%;
+      font-size: var(--font-size-lg);
+    }
+
+    .article-content :global(h2) {
+      font-size: var(--font-size-5xl);
+    }
+
+    .article-content :global(h3) {
+      font-size: var(--font-size-2xl);
+    }
+
+    .article-content :global(h4) {
+      font-size: var(--font-size-xl);
+    }
+
+    .article-content :global(p:first-of-type) {
+      font-size: var(--font-size-xl);
+    }
+
+    .article-content :global(p) {
+      margin-bottom: var(--spacing-md);
+    }
+
+    .article-content :global(li) {
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .article-content :global(p),
+    .article-content :global(li) {
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+      hyphens: none;
+      -webkit-hyphens: none;
+    }
+
+    .article-content :global(pre) {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      max-width: 100%;
+      border-radius: var(--radius-md);
+    }
+
+    .article-content :global(pre code) {
+      white-space: pre;
+      word-wrap: normal;
+      overflow-wrap: normal;
+    }
+
+    .content-wrapper {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .footer-nav {
+      flex-direction: column;
+      gap: var(--spacing-md);
+    }
+
+    .footer-cta {
+      padding: var(--spacing-lg);
+    }
+  }
+
+  /* Extra small screens */
+  @media (max-width: 400px) {
+    .article-header h1 {
+      font-size: var(--font-size-6xl);
+    }
+
+    .description {
+      font-size: var(--font-size-lg);
+    }
+
+    .article-content {
+      font-size: var(--font-size-lg);
+    }
+
+    .article-content :global(h2) {
+      font-size: var(--font-size-4xl);
+    }
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .back-link svg,
+    .mobile-toc-toggle,
+    .mobile-toc-toggle svg,
+    .mobile-toc-panel,
+    .mobile-toc-backdrop,
+    .toc-nav a {
+      transition: none;
+    }
+  }
+</style>
+
+<script is:inline set:html={ARTICLE_LAYOUT_SCRIPT} />

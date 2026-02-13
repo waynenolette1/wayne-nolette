@@ -1,0 +1,1529 @@
+---
+/**
+ * Search dialog component with full-text search across all content.
+ * Uses Fuse.js for fuzzy search with content snippets and highlighted matches.
+ * Triggered via Cmd/Ctrl+K.
+ */
+import { getCollection } from 'astro:content';
+
+const allPosts = await getCollection('writing', ({ data }) => !data.draft);
+const caseStudies = await getCollection('case-studies');
+const adrs = await getCollection('adrs');
+
+/**
+ * Strip markdown syntax for plain text search.
+ * Keeps the text content while removing formatting.
+ */
+function stripMarkdown(text: string): string {
+  return (
+    text
+      // Remove code blocks
+      .replace(/```[\s\S]*?```/g, '')
+      // Remove inline code
+      .replace(/`[^`]+`/g, '')
+      // Remove images
+      .replace(/!\[.*?\]\(.*?\)/g, '')
+      // Remove links but keep text
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      // Remove headers
+      .replace(/^#{1,6}\s+/gm, '')
+      // Remove bold/italic
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/__([^_]+)__/g, '$1')
+      .replace(/_([^_]+)_/g, '$1')
+      // Remove blockquotes
+      .replace(/^>\s+/gm, '')
+      // Remove horizontal rules
+      .replace(/^---+$/gm, '')
+      // Collapse whitespace
+      .replace(/\s+/g, ' ')
+      .trim()
+  );
+}
+
+// Prepare search index data with full body content
+const searchData = [
+  ...allPosts.map((post) => ({
+    id: post.id,
+    title: post.data.title,
+    description: post.data.description,
+    tags: post.data.tags || [],
+    content: stripMarkdown(post.body || ''),
+    type: 'writing' as const,
+    url: `${import.meta.env.BASE_URL}writing/${post.id}/`,
+  })),
+  ...caseStudies.map((cs) => ({
+    id: cs.id,
+    title: cs.data.title,
+    description: cs.data.description,
+    tags: cs.data.tech || [],
+    content: stripMarkdown(cs.body || ''),
+    type: 'case-study' as const,
+    url: `${import.meta.env.BASE_URL}case-studies/${cs.id}/`,
+  })),
+  ...adrs.map((adr) => ({
+    id: adr.id,
+    title: adr.data.title,
+    description: adr.data.description,
+    tags: adr.data.tags || [],
+    content: stripMarkdown(adr.body || ''),
+    type: 'adr' as const,
+    url: `${import.meta.env.BASE_URL}adrs/${adr.id}/`,
+  })),
+];
+---
+
+<div class="search-trigger-wrapper">
+  <button
+    type="button"
+    class="search-trigger"
+    id="search-trigger"
+    aria-label="Search (Cmd+K)"
+    aria-expanded="false"
+    aria-controls="search-dialog"
+  >
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      aria-hidden="true"
+    >
+      <circle cx="11" cy="11" r="8"></circle>
+      <path d="m21 21-4.35-4.35"></path>
+    </svg>
+    <span class="search-text">Search</span>
+    <kbd class="search-shortcut">
+      <span class="kbd-key">⌘</span>K
+    </kbd>
+  </button>
+</div>
+
+<dialog
+  class="search-dialog"
+  id="search-dialog"
+  aria-label="Search"
+  aria-modal="true"
+>
+  <div class="search-container">
+    <div class="search-header">
+      <div class="search-input-wrapper">
+        <svg
+          class="search-icon"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+        </svg>
+        <input
+          type="search"
+          class="search-input"
+          id="search-input"
+          placeholder="Search articles, case studies, ADRs..."
+          autocomplete="off"
+          autofocus
+          aria-label="Search articles, case studies, and ADRs"
+        />
+        <button
+          type="button"
+          class="search-close"
+          id="search-close"
+          aria-label="Close search"
+        >
+          <kbd>esc</kbd>
+        </button>
+      </div>
+    </div>
+
+    <div class="search-results" id="search-results">
+      <div class="search-empty" id="search-empty">
+        <div class="search-empty-icon">
+          <svg
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            aria-hidden="true"
+          >
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+        </div>
+        <h2 class="search-empty-title">Search across all content</h2>
+        <p class="search-empty-subtitle">
+          Articles, case studies, ADRs, and more
+        </p>
+        <div class="search-shortcut-hero">
+          <kbd class="shortcut-key"><span id="shortcut-modifier">⌘</span></kbd>
+          <span class="shortcut-plus">+</span>
+          <kbd class="shortcut-key">K</kbd>
+          <span class="shortcut-label">to open anytime</span>
+        </div>
+        <div class="search-hints">
+          <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+          <span><kbd>↵</kbd> select</span>
+          <span><kbd>esc</kbd> close</span>
+        </div>
+      </div>
+      <ul class="results-list" id="results-list" role="listbox"></ul>
+      <div class="no-results" id="no-results" style="display: none;">
+        <svg
+          width="48"
+          height="48"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+        </svg>
+        <h2 class="no-results-title">No results found</h2>
+        <p class="no-results-hint">Try different keywords or check spelling</p>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<script is:inline define:vars={{ searchData }}>
+  // Store search data globally for the module script to access
+  // This inline script runs synchronously before module scripts
+  window.__searchData = searchData;
+</script>
+
+<script>
+  // Import Fuse.js properly through the bundler
+  import Fuse from 'fuse.js';
+  import type { FuseResult } from 'fuse.js';
+
+  // Import search utilities from shared module (avoids duplication)
+  import { highlightSearchTerms, getContentSnippet } from '../utils/search';
+
+  // Type for search data items
+  interface SearchItem {
+    id: string;
+    title: string;
+    description: string;
+    tags: string[];
+    content: string;
+    type: 'writing' | 'case-study' | 'adr';
+    url: string;
+  }
+
+  // Extend Window interface for __searchData
+  declare global {
+    interface Window {
+      __searchData: SearchItem[];
+      __searchKeydownRegistered?: boolean;
+    }
+  }
+
+  let fuse: Fuse<SearchItem> | null = null;
+
+  function initSearch(): void {
+    // Always try to initialize if we have data but no fuse instance
+    if (!fuse && window.__searchData && window.__searchData.length > 0) {
+      fuse = new Fuse(window.__searchData, {
+        keys: [
+          { name: 'title', weight: 0.35 },
+          { name: 'description', weight: 0.25 },
+          { name: 'tags', weight: 0.15 },
+          { name: 'content', weight: 0.25 },
+        ],
+        threshold: 0.4,
+        includeScore: true,
+        includeMatches: true,
+        minMatchCharLength: 2,
+        ignoreLocation: true,
+        findAllMatches: true,
+      });
+    }
+  }
+
+  // Initialize immediately if data is already available
+  initSearch();
+
+  // Store the current search query for highlighting
+  let currentQuery = '';
+
+  // Helper functions to get fresh DOM references (needed after View Transitions)
+  function getDialog(): HTMLDialogElement | null {
+    return document.getElementById('search-dialog') as HTMLDialogElement | null;
+  }
+  function getTrigger(): HTMLElement | null {
+    return document.getElementById('search-trigger');
+  }
+  function getInput(): HTMLInputElement | null {
+    return document.getElementById('search-input') as HTMLInputElement | null;
+  }
+  function getResultsList(): HTMLElement | null {
+    return document.getElementById('results-list');
+  }
+  function getSearchEmpty(): HTMLElement | null {
+    return document.getElementById('search-empty');
+  }
+  function getNoResults(): HTMLElement | null {
+    return document.getElementById('no-results');
+  }
+  function getCloseBtn(): HTMLElement | null {
+    return document.getElementById('search-close');
+  }
+
+  let selectedIndex = -1;
+  let results: FuseResult<SearchItem>[] = [];
+  let visualViewportCleanup: (() => void) | null = null;
+
+  // Live region for screen reader announcements
+  let liveRegion: HTMLElement | null = null;
+
+  function getLiveRegion(): HTMLElement {
+    if (!liveRegion || !document.body.contains(liveRegion)) {
+      liveRegion = document.createElement('div');
+      liveRegion.id = 'search-live-region';
+      liveRegion.setAttribute('aria-live', 'polite');
+      liveRegion.setAttribute('aria-atomic', 'true');
+      liveRegion.className = 'sr-only';
+      document.body.appendChild(liveRegion);
+    }
+    return liveRegion;
+  }
+
+  function announceResults(count: number): void {
+    const region = getLiveRegion();
+    if (count === 0) {
+      region.textContent = 'No results found';
+    } else if (count === 1) {
+      region.textContent = '1 result found';
+    } else {
+      region.textContent = `${count} results found`;
+    }
+  }
+
+  /**
+   * Track visual viewport height for iOS keyboard support.
+   * Sets --vvh CSS variable that the modal uses for height.
+   */
+  function bindVisualViewportHeight(): () => void {
+    const vv = window.visualViewport;
+    if (!vv) return () => {};
+
+    const updateHeight = () => {
+      document.documentElement.style.setProperty('--vvh', `${vv.height}px`);
+    };
+
+    updateHeight();
+    vv.addEventListener('resize', updateHeight, { passive: true });
+    vv.addEventListener('scroll', updateHeight, { passive: true });
+
+    return () => {
+      vv.removeEventListener('resize', updateHeight);
+      vv.removeEventListener('scroll', updateHeight);
+      document.documentElement.style.removeProperty('--vvh');
+    };
+  }
+
+  function openSearch(): void {
+    initSearch();
+    // Clean up previous visual viewport tracking if it exists
+    if (visualViewportCleanup) {
+      visualViewportCleanup();
+    }
+    // Start tracking visual viewport for iOS keyboard
+    visualViewportCleanup = bindVisualViewportHeight();
+    getDialog()?.showModal();
+    getTrigger()?.setAttribute('aria-expanded', 'true');
+    getInput()?.focus();
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeSearch(): void {
+    getDialog()?.close();
+    getTrigger()?.setAttribute('aria-expanded', 'false');
+    const input = getInput();
+    const resultsList = getResultsList();
+    const searchEmpty = getSearchEmpty();
+    const noResults = getNoResults();
+    if (input) input.value = '';
+    if (resultsList) resultsList.innerHTML = '';
+    if (searchEmpty) searchEmpty.style.display = '';
+    if (noResults) noResults.style.display = 'none';
+    selectedIndex = -1;
+    results = [];
+    document.body.style.overflow = '';
+    // Cleanup visual viewport tracking
+    if (visualViewportCleanup) {
+      visualViewportCleanup();
+      visualViewportCleanup = null;
+    }
+    // Restore focus to trigger button for keyboard accessibility
+    getTrigger()?.focus();
+  }
+
+  /**
+   * Highlight search terms in text (wrapper for consistency).
+   * Now uses the query-based approach instead of Fuse.js indices.
+   */
+  function highlightMatch(text: string): string {
+    return highlightSearchTerms(text, currentQuery);
+  }
+
+  function getTypeLabel(type: string): string {
+    switch (type) {
+      case 'writing':
+        return 'Article';
+      case 'case-study':
+        return 'Case Study';
+      case 'adr':
+        return 'ADR';
+      default:
+        return type;
+    }
+  }
+
+  function getTypeIcon(type: string): string {
+    switch (type) {
+      case 'writing':
+        return '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>';
+      case 'case-study':
+        return '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>';
+      case 'adr':
+        return '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>';
+      default:
+        return '';
+    }
+  }
+
+  function renderResults(): void {
+    const resultsList = getResultsList();
+    const input = getInput();
+    const searchEmpty = getSearchEmpty();
+    const noResults = getNoResults();
+    if (!resultsList || !input || !searchEmpty || !noResults) return;
+
+    if (results.length === 0) {
+      resultsList.innerHTML = '';
+      if (input.value.trim().length >= 2) {
+        searchEmpty.style.display = 'none';
+        noResults.style.display = 'flex';
+      } else {
+        searchEmpty.style.display = '';
+        noResults.style.display = 'none';
+      }
+      return;
+    }
+
+    searchEmpty.style.display = 'none';
+    noResults.style.display = 'none';
+
+    resultsList.innerHTML = results
+      .map((result, index) => {
+        const item = result.item;
+        const contentMatch = result.matches?.find((m) => m.key === 'content');
+
+        // Use query-based highlighting for title
+        const title = highlightMatch(item.title);
+
+        let snippet: string = item.description;
+        let snippetClass = 'result-description';
+
+        // If there's a content match, show a snippet from content
+        if (contentMatch) {
+          snippet = getContentSnippet(item.content, currentQuery);
+          snippet = highlightMatch(snippet);
+          snippetClass = 'result-snippet';
+        } else {
+          // Otherwise highlight the description
+          snippet = highlightMatch(item.description);
+        }
+
+        return `
+        <li
+          class="result-item ${index === selectedIndex ? 'selected' : ''}"
+          role="option"
+          aria-selected="${index === selectedIndex}"
+          data-index="${index}"
+          data-url="${item.url}"
+          tabindex="${index === selectedIndex ? '0' : '-1'}"
+        >
+          <div class="result-type-badge type-${item.type}">
+            ${getTypeIcon(item.type)}
+          </div>
+          <div class="result-content">
+            <div class="result-header">
+              <span class="result-title">${title}</span>
+              <span class="result-type-label">${getTypeLabel(item.type)}</span>
+            </div>
+            <span class="${snippetClass}">${snippet}</span>
+          </div>
+          <svg class="result-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </li>
+      `;
+      })
+      .join('');
+
+    // Announce results count to screen readers
+    announceResults(results.length);
+  }
+
+  // Validate URL is a safe relative path (starts with base path)
+  function isValidUrl(url: string | undefined): url is string {
+    if (!url) return false;
+    // Must start with base path (relative URL) - prevents javascript: or external URLs
+    const basePath = import.meta.env.BASE_URL || '/';
+    return url.startsWith(basePath) || url.startsWith('/');
+  }
+
+  // Navigate to result URL
+  function navigateToResult(item: HTMLElement): void {
+    const url = item.dataset.url;
+    if (isValidUrl(url)) window.location.href = url;
+  }
+
+  // Event delegation for result list - prevents memory leaks from per-item listeners
+  function setupResultsListDelegation(): void {
+    const resultsList = getResultsList();
+    if (!resultsList || resultsList.dataset.delegated === 'true') return;
+    resultsList.dataset.delegated = 'true';
+
+    // Click delegation
+    resultsList.addEventListener('click', (e) => {
+      if (!e.target) return;
+      const item = (e.target as HTMLElement).closest(
+        '.result-item'
+      ) as HTMLElement | null;
+      if (item) navigateToResult(item);
+    });
+
+    // Mouseenter delegation for hover selection
+    resultsList.addEventListener('mouseover', (e) => {
+      if (!e.target) return;
+      const item = (e.target as HTMLElement).closest(
+        '.result-item'
+      ) as HTMLElement | null;
+      if (item) {
+        const index = parseInt(item.dataset.index || '-1', 10);
+        // Guard against NaN from invalid dataset values
+        if (!isNaN(index) && index >= 0) updateSelection(index);
+      }
+    });
+
+    // Keyboard delegation for Enter/Space
+    resultsList.addEventListener('keydown', (e) => {
+      if (!e.target) return;
+      const item = (e.target as HTMLElement).closest(
+        '.result-item'
+      ) as HTMLElement | null;
+      if (item && (e.key === 'Enter' || e.key === ' ')) {
+        e.preventDefault();
+        navigateToResult(item);
+      }
+    });
+  }
+
+  function updateSelection(newIndex: number): void {
+    const resultsList = getResultsList();
+    if (!resultsList) return;
+    selectedIndex = Math.max(-1, Math.min(newIndex, results.length - 1));
+    resultsList.querySelectorAll('.result-item').forEach((item, i) => {
+      const isSelected = i === selectedIndex;
+      item.classList.toggle('selected', isSelected);
+      // Update ARIA and tabindex for accessibility
+      item.setAttribute('aria-selected', String(isSelected));
+      item.setAttribute('tabindex', isSelected ? '0' : '-1');
+      if (isSelected) {
+        item.scrollIntoView({ block: 'nearest' });
+      }
+    });
+  }
+
+  function search(query: string): void {
+    // Store the query for highlighting
+    currentQuery = query;
+
+    if (!fuse || query.trim().length < 2) {
+      results = [];
+      selectedIndex = -1; // Reset selection when clearing results
+      renderResults();
+      return;
+    }
+
+    results = fuse.search(query, { limit: 10 });
+    selectedIndex = results.length > 0 ? 0 : -1;
+    renderResults();
+  }
+
+  // Debounce search input to prevent excessive searches on rapid typing
+  let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+  // Setup function to attach event listeners to current DOM elements
+  // Called on initial load and after View Transitions
+  function setupEventListeners(): void {
+    const trigger = getTrigger();
+    const closeBtn = getCloseBtn();
+    const dialog = getDialog();
+    const input = getInput();
+
+    trigger?.addEventListener('click', openSearch);
+    closeBtn?.addEventListener('click', closeSearch);
+
+    dialog?.addEventListener('click', (e) => {
+      if (e.target === dialog) {
+        closeSearch();
+      }
+    });
+
+    input?.addEventListener('input', () => {
+      if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        const currentInput = getInput();
+        if (currentInput) search(currentInput.value);
+      }, 150); // 150ms debounce for responsive feel while reducing search load
+    });
+
+    input?.addEventListener('keydown', (e) => {
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          updateSelection(selectedIndex + 1);
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          updateSelection(selectedIndex - 1);
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (selectedIndex >= 0 && results[selectedIndex]) {
+            const url = results[selectedIndex].item.url;
+            // Validate URL before navigation (same check as navigateToResult)
+            if (isValidUrl(url)) {
+              window.location.href = url;
+            }
+          }
+          break;
+        case 'Escape':
+          closeSearch();
+          break;
+      }
+    });
+
+    // Setup event delegation for results list (prevents memory leaks)
+    setupResultsListDelegation();
+  }
+
+  // Initial setup
+  setupEventListeners();
+
+  // Global keyboard shortcut - only register once
+  if (!window.__searchKeydownRegistered) {
+    window.__searchKeydownRegistered = true;
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        const currentDialog = getDialog();
+        if (currentDialog?.open) {
+          closeSearch();
+        } else {
+          openSearch();
+        }
+      }
+    });
+
+    // Cleanup before view transitions to prevent memory leaks
+    document.addEventListener('astro:before-swap', () => {
+      // Clear debounce timer to prevent stale search execution
+      if (searchDebounceTimer) {
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = null;
+      }
+      // Clean up visual viewport listener if still active
+      if (visualViewportCleanup) {
+        visualViewportCleanup();
+        visualViewportCleanup = null;
+      }
+      // Clear live region reference to prevent detached DOM node
+      liveRegion = null;
+      // Reset delegation flag so it can be re-setup on new DOM
+      const resultsList = getResultsList();
+      if (resultsList) {
+        delete resultsList.dataset.delegated;
+      }
+      // Close dialog and reset body overflow
+      const currentDialog = getDialog();
+      if (currentDialog?.open) {
+        currentDialog.close();
+        document.body.style.overflow = '';
+      }
+    });
+
+    // Re-init after view transitions
+    document.addEventListener('astro:after-swap', () => {
+      // Close any open dialog (shouldn't happen, but just in case)
+      const currentDialog = getDialog();
+      if (currentDialog?.open) {
+        currentDialog.close();
+      }
+      // Re-attach event listeners to new DOM elements
+      setupEventListeners();
+      // Re-init fuse if needed
+      initSearch();
+      // Update shortcut display for new DOM
+      updateShortcutDisplay();
+    });
+  }
+
+  // Update shortcut display based on OS (needs to run after View Transitions too)
+  function updateShortcutDisplay(): void {
+    const isMac = navigator.userAgent.indexOf('Mac') !== -1;
+    if (!isMac) {
+      const kbdKey = document.querySelector('.kbd-key');
+      const shortcutModifier = document.getElementById('shortcut-modifier');
+      if (kbdKey) kbdKey.textContent = 'Ctrl';
+      if (shortcutModifier) shortcutModifier.textContent = 'Ctrl';
+    }
+  }
+
+  // Initial shortcut display update
+  updateShortcutDisplay();
+</script>
+
+<style>
+  .search-trigger-wrapper {
+    display: flex;
+    align-items: center;
+  }
+
+  .search-trigger {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    min-height: var(--touch-target);
+    background: var(--color-bg-subtle);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    letter-spacing: var(--letter-spacing-subtle);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-family: inherit;
+    position: relative;
+    overflow: visible;
+    /* Remove Safari default focus outline */
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Clean focus state without Safari outline */
+  .search-trigger:focus-visible {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: inset 0 0 0 1px var(--color-accent-30);
+  }
+
+  .search-trigger:focus-visible::before {
+    opacity: var(--opacity-muted);
+  }
+
+  /* Removed blur glow effect */
+
+  .search-trigger svg {
+    transition: transform var(--transition-bounce)
+      cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @media (hover: hover) {
+    .search-trigger:hover {
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+      background: var(--color-accent-5);
+      box-shadow: 0 0 15px var(--color-accent-15);
+    }
+
+    .search-trigger:hover svg {
+      transform: scale(1.1) rotate(-5deg);
+    }
+  }
+
+  .search-text {
+    display: none;
+  }
+
+  @media (min-width: 640px) {
+    .search-text {
+      display: inline;
+    }
+  }
+
+  .search-shortcut {
+    display: none;
+    align-items: center;
+    gap: var(--spacing-2xs);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-2xs);
+    font-family: inherit;
+    color: var(--color-text-subtle);
+  }
+
+  @media (min-width: 640px) {
+    .search-shortcut {
+      display: flex;
+    }
+  }
+
+  .kbd-key {
+    font-size: var(--font-size-xs);
+  }
+
+  /* Dialog styles */
+  .search-dialog {
+    position: fixed;
+    top: 12vh;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - var(--spacing-2xl));
+    max-width: 640px;
+    max-height: 72vh;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(
+      180deg,
+      var(--color-bg) 0%,
+      var(--color-bg-subtle) 100%
+    );
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg); /* Consistent with card elements */
+    box-shadow:
+      0 25px 60px -12px var(--color-overlay-black-60),
+      0 0 0 1px var(--color-overlay-white-05),
+      0 0 80px var(--color-accent-15);
+    overflow: hidden;
+  }
+
+  /* Gradient accent line at top of dialog */
+  .search-dialog::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--border-accent);
+    background: linear-gradient(
+      90deg,
+      var(--color-accent),
+      var(--color-gradient-purple)
+    );
+    z-index: 10;
+  }
+
+  .search-dialog::backdrop {
+    background: var(--color-backdrop);
+    backdrop-filter: blur(var(--blur-md));
+    -webkit-backdrop-filter: blur(var(--blur-md));
+  }
+
+  .search-dialog[open] {
+    animation: dialogFadeIn var(--transition-base) cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes dialogFadeIn {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(calc(-1 * var(--translate-md)))
+        scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0) scale(1);
+    }
+  }
+
+  @keyframes mobileDialogFadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .search-container {
+    display: flex;
+    flex-direction: column;
+    max-height: 72vh;
+  }
+
+  .search-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-lg);
+    padding-top: calc(var(--spacing-md) + var(--border-accent));
+    border-bottom: 1px solid var(--color-border-subtle);
+    background: var(--color-bg);
+  }
+
+  .search-input-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--color-bg-subtle);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-lg);
+    transition: all var(--transition-fast);
+  }
+
+  .search-input-wrapper:focus-within {
+    border-color: var(--color-accent);
+    background: var(--color-bg);
+    box-shadow: 0 0 0 var(--border-highlight) var(--color-accent-15);
+  }
+
+  .search-icon {
+    color: var(--color-accent);
+    flex-shrink: 0;
+    opacity: var(--opacity-strong);
+  }
+
+  .search-input-wrapper:focus-within .search-icon {
+    opacity: 1;
+  }
+
+  .search-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: var(--font-size-xl);
+    color: var(--color-text);
+    font-family: inherit;
+    box-shadow: none;
+  }
+
+  /* Remove native focus styling - focus handled by wrapper */
+  .search-input:focus {
+    outline: none;
+    box-shadow: none;
+  }
+
+  .search-input::placeholder {
+    color: var(--color-text-subtle);
+  }
+
+  .search-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-2xs) var(--spacing-sm);
+    background: transparent;
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-subtle);
+    font-size: var(--font-size-xs);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-family: inherit;
+    flex-shrink: 0;
+    /* Remove Safari default focus outline */
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  @media (hover: hover) {
+    .search-close:hover {
+      background: var(--color-bg-subtle);
+      border-color: var(--color-border);
+      color: var(--color-text);
+    }
+  }
+
+  /* Clean focus state without Safari outline */
+  .search-close:focus-visible {
+    outline: none;
+    background: var(--color-bg-subtle);
+    box-shadow: inset 0 0 0 2px var(--color-accent-30);
+  }
+
+  .search-results {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: var(--spacing-md);
+    /* Add bottom padding to prevent keyboard overlap */
+    padding-bottom: calc(var(--spacing-2xl) + env(safe-area-inset-bottom, 0px));
+  }
+
+  .search-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl) var(--spacing-lg);
+    color: var(--color-text-muted);
+    text-align: center;
+    gap: var(--spacing-sm);
+  }
+
+  .search-empty-icon {
+    color: var(--color-accent);
+    opacity: var(--opacity-soft);
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .search-empty-title {
+    margin: 0;
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text);
+  }
+
+  .search-empty-subtitle {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    letter-spacing: var(--letter-spacing-subtle);
+  }
+
+  .search-shortcut-hero {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin: var(--spacing-lg) 0;
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: linear-gradient(
+      135deg,
+      var(--color-accent-10) 0%,
+      var(--color-gradient-purple-10) 100%
+    );
+    border: 1px solid var(--color-accent-20);
+    border-radius: var(--radius-lg);
+  }
+
+  .shortcut-key {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--size-4xl);
+    height: var(--size-4xl);
+    padding: 0 var(--spacing-sm);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-accent);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .shortcut-plus {
+    color: var(--color-text-subtle);
+    font-weight: var(--font-weight-medium);
+  }
+
+  .shortcut-label {
+    margin-left: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    letter-spacing: var(--letter-spacing-subtle);
+  }
+
+  .search-hints {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--spacing-md);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid var(--color-border-subtle);
+    width: 100%;
+    max-width: 300px;
+    letter-spacing: var(--letter-spacing-subtle);
+  }
+
+  .search-hints span {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+  }
+
+  .search-hints kbd {
+    padding: var(--spacing-2xs) var(--spacing-sm);
+    background: var(--color-bg-subtle);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: var(--font-size-2xs);
+  }
+
+  .no-results {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-2xl);
+    color: var(--color-text-muted);
+    text-align: center;
+  }
+
+  .no-results svg {
+    opacity: var(--opacity-half);
+    margin-bottom: var(--spacing-md);
+  }
+
+  .no-results-title {
+    margin: 0 0 var(--spacing-xs);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+  }
+
+  .no-results-hint {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-subtle);
+  }
+
+  .results-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Result item styles moved to is:global block below (dynamically created via JS innerHTML) */
+
+  /* Mobile: Full-screen overlay that works with iOS keyboard */
+  @media (max-width: 640px) {
+    .search-dialog {
+      /* Full-screen fixed layout */
+      position: fixed;
+      inset: 0;
+      top: 0;
+      left: 0;
+      transform: none;
+      width: 100%;
+      max-width: 100%;
+      /* Use max-height instead of height to prevent flickering on keyboard show/hide */
+      height: 100vh;
+      max-height: var(--vvh, 100dvh);
+      border-radius: 0;
+      /* Safe area support for notched devices */
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: 0; /* Don't add safe-area here, added in results section */
+    }
+
+    .search-dialog[open] {
+      animation: mobileDialogFadeIn var(--transition-fast);
+    }
+
+    .search-container {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      height: 100%;
+      max-height: 100%;
+    }
+
+    .search-header {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: var(--color-bg);
+      padding: var(--spacing-md);
+      gap: var(--spacing-sm);
+    }
+
+    .search-results {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      /* Use safe-area inset as base padding, not in addition to spacing */
+      padding: var(--spacing-sm) var(--spacing-md)
+        max(var(--spacing-3xl), env(safe-area-inset-bottom, 0px));
+      /* Max height ensures scrollable area accounts for header - add minimum for keyboard space */
+      max-height: calc(var(--vvh, 100dvh) - 120px);
+      min-height: 200px; /* Prevent too-small result area when keyboard is shown */
+    }
+
+    /* Hide desktop-only elements on mobile */
+    .search-close kbd {
+      display: none;
+    }
+
+    .search-close {
+      /* Show X icon instead of esc text on mobile - maintain 44px touch target */
+      min-width: var(--touch-target);
+      min-height: var(--touch-target);
+      padding: var(--spacing-sm);
+    }
+
+    .search-close::before {
+      content: '✕';
+      font-size: var(--font-size-xl);
+    }
+
+    /* Hide keyboard hints on touch devices */
+    .search-hints {
+      display: none;
+    }
+
+    .search-shortcut-hero {
+      display: none;
+    }
+
+    /* Result item mobile overrides moved to is:global block */
+
+    /* Simpler empty state on mobile */
+    .search-empty {
+      padding: var(--spacing-lg);
+    }
+
+    .search-empty-icon svg {
+      width: var(--size-4xl);
+      height: var(--size-4xl);
+    }
+
+    .search-empty-title {
+      font-size: var(--font-size-xl);
+    }
+  }
+
+  /* Extra small screens (iPhone SE, older phones) */
+  @media (max-width: 400px) {
+    /* Result item overrides moved to is:global block */
+
+    .search-header {
+      padding: var(--spacing-sm);
+      gap: var(--spacing-sm);
+    }
+
+    .search-input {
+      font-size: var(--font-size-lg);
+    }
+  }
+
+  /* Respect reduced motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    .search-dialog[open] {
+      animation: none;
+    }
+
+    .search-trigger,
+    .search-close {
+      transition: none;
+    }
+  }
+</style>
+
+<!-- Global styles for dynamically inserted elements (innerHTML results + mark highlights) -->
+<style is:global>
+  /* === Result items (created via JS innerHTML, not in Astro template) === */
+  .search-dialog .result-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-lg);
+    min-height: 56px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    background: transparent;
+    border-bottom: 1px solid var(--color-border-subtle);
+    border-left: 3px solid transparent;
+    position: relative;
+    user-select: none;
+  }
+
+  .search-dialog .result-item:last-child {
+    border-bottom: none;
+  }
+
+  @media (hover: hover) {
+    .search-dialog .result-item:hover {
+      background: var(--color-accent-5);
+      border-left-color: var(--color-accent);
+    }
+
+    .search-dialog .result-item:hover .result-title {
+      color: var(--color-accent);
+    }
+
+    .search-dialog .result-item:hover .result-type-badge {
+      border-color: var(--color-accent-30);
+    }
+
+    .search-dialog .result-item:hover .result-arrow {
+      opacity: 1;
+      transform: translateX(0);
+      color: var(--color-accent);
+    }
+  }
+
+  .search-dialog .result-item:active {
+    background: var(--color-accent-10);
+  }
+
+  .search-dialog .result-item.selected {
+    background: var(--color-accent-08);
+    border-left-color: var(--color-accent);
+  }
+
+  .search-dialog .result-item.selected .result-title {
+    color: var(--color-accent);
+  }
+
+  .search-dialog .result-item.selected .result-arrow {
+    opacity: 1;
+    transform: translateX(0);
+    color: var(--color-accent);
+  }
+
+  .search-dialog .result-item:focus-visible {
+    outline: none;
+    background: var(--color-accent-10);
+    border-left-color: var(--color-accent);
+    box-shadow: inset 0 0 0 1px var(--color-accent-30);
+  }
+
+  /* Type badge */
+  .search-dialog .result-type-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: var(--size-3xl);
+    height: var(--size-3xl);
+    background: var(--color-bg-subtle);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-md);
+    color: var(--color-text-muted);
+    transition: all var(--transition-fast);
+  }
+
+  .search-dialog .result-type-badge.type-writing {
+    background: var(--color-accent-08);
+    border-color: var(--color-accent-20);
+    color: var(--color-accent);
+  }
+
+  .search-dialog .result-type-badge.type-case-study {
+    background: var(--color-gradient-purple-08);
+    border-color: var(--color-gradient-purple-20);
+    color: var(--color-gradient-purple);
+  }
+
+  .search-dialog .result-type-badge.type-adr {
+    background: var(--color-success-08);
+    border-color: var(--color-success-20);
+    color: var(--color-success);
+  }
+
+  .search-dialog .result-type-badge svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Result content layout */
+  .search-dialog .result-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2xs);
+  }
+
+  .search-dialog .result-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+  }
+
+  .search-dialog .result-title {
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-md);
+    color: var(--color-text);
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: var(--line-height-snug);
+    transition: color var(--transition-fast);
+  }
+
+  .search-dialog .result-type-label {
+    flex-shrink: 0;
+    font-size: var(--font-size-2xs);
+    font-weight: var(--font-weight-medium);
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-wide);
+    color: var(--color-text-subtle);
+    padding: var(--spacing-2xs) var(--spacing-sm);
+    background: var(--color-bg-subtle);
+    border-radius: var(--radius-sm);
+  }
+
+  .search-dialog .result-description {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    letter-spacing: var(--letter-spacing-slight);
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: var(--line-height-relaxed);
+  }
+
+  .search-dialog .result-snippet {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: var(--line-height-relaxed);
+    letter-spacing: var(--letter-spacing-slight);
+  }
+
+  .search-dialog .result-arrow {
+    flex-shrink: 0;
+    color: var(--color-text-subtle);
+    opacity: 0;
+    transform: translateX(calc(-1 * var(--translate-xs)));
+    transition: all var(--transition-fast);
+    align-self: center;
+  }
+
+  /* === Mobile overrides for result items === */
+  @media (max-width: 640px) {
+    .search-dialog .result-type-badge {
+      width: var(--size-2xl);
+      height: var(--size-2xl);
+    }
+
+    .search-dialog .result-type-badge svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .search-dialog .result-item {
+      padding: var(--spacing-md);
+      padding-left: calc(var(--spacing-md) + 3px);
+      gap: var(--spacing-sm);
+      min-height: var(--touch-target);
+    }
+
+    .search-dialog .result-item:active {
+      background: var(--color-accent-15);
+      border-left-color: var(--color-accent);
+    }
+
+    .search-dialog .result-header {
+      flex-wrap: wrap;
+      gap: var(--spacing-xs);
+    }
+
+    .search-dialog .result-title {
+      -webkit-line-clamp: 2;
+      font-size: var(--font-size-base);
+    }
+
+    .search-dialog .result-type-label {
+      display: none;
+    }
+
+    .search-dialog .result-description,
+    .search-dialog .result-snippet {
+      -webkit-line-clamp: 2;
+      font-size: var(--font-size-sm);
+    }
+
+    .search-dialog .result-arrow {
+      opacity: var(--opacity-half);
+      transform: none;
+    }
+  }
+
+  /* === Extra small screens === */
+  @media (max-width: 400px) {
+    .search-dialog .result-item {
+      padding: var(--spacing-sm);
+      padding-left: calc(var(--spacing-sm) + 3px);
+      gap: var(--spacing-sm);
+      min-height: var(--touch-target);
+    }
+
+    .search-dialog .result-type-badge {
+      width: var(--size-xl);
+      height: var(--size-xl);
+    }
+
+    .search-dialog .result-type-badge svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .search-dialog .result-title {
+      font-size: var(--font-size-sm);
+    }
+
+    .search-dialog .result-description,
+    .search-dialog .result-snippet {
+      font-size: var(--font-size-xs);
+      -webkit-line-clamp: 1;
+    }
+
+    .search-dialog .result-arrow {
+      width: 14px;
+      height: 14px;
+    }
+  }
+
+  /* === Reduced motion for dynamic elements === */
+  @media (prefers-reduced-motion: reduce) {
+    .search-dialog .result-item,
+    .search-dialog .result-arrow {
+      transition: none;
+    }
+  }
+
+  /* === Mark highlight styles === */
+  .search-dialog .result-title mark,
+  .search-dialog .result-description mark,
+  .search-dialog .result-snippet mark {
+    background: var(--color-accent-15);
+    color: var(--color-text);
+    border-radius: 0;
+    padding: 0;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    font-weight: inherit;
+  }
+
+  .search-dialog .result-item:hover mark,
+  .search-dialog .result-item.selected mark {
+    background: var(--color-accent-25);
+  }
+</style>
