@@ -20,7 +20,7 @@ export const SITE_CONFIG = {
   /** Full domain for analytics and external links */
   domain: new URL(import.meta.env.SITE).hostname,
   /** Full site URL */
-  siteUrl: `${import.meta.env.SITE}${import.meta.env.BASE_URL}`,
+  siteUrl: import.meta.env.SITE,
 } as const;
 
 // ======================

@@ -11,33 +11,33 @@ const COMPANIES = ['ZoomInfo', 'BAE Systems'] as const;
 const keyProjects = [
   {
     title: 'IE Hub Platform',
-    metric: 'Ops Intelligence',
+    metric: '6 Systems Integrated',
     description:
-      'Unified operational intelligence platform for Infrastructure Engineering — consolidating DataDog, PagerDuty, Jira, Slack, Zoom, and Backstage into a single team-scoped system for service health, compliance, cost analysis, and AI-powered investigation.',
+      'Correlates incidents, releases, costs, and monitor health across DataDog, PagerDuty, Jira, Slack, Zoom, and Backstage. One dashboard for Infrastructure Engineering to track service health, compliance, and cost analysis.',
     tech: ['React 19', 'GCP', 'BigQuery'],
     link: `${import.meta.env.BASE_URL}case-studies/ie-hub-platform/`,
   },
   {
     title: 'AI Investigation Agent',
-    metric: '36 AI Tools',
+    metric: '36 Validated Tools',
     description:
-      'Production-grade AI agent integrated via the internal Agentic Platform — Claude 4.5 Sonnet for reasoning, GPT-4o-mini for suggestions, 36 governed tools, 21 BigQuery tables, with structured tool invocation, guardrails, and execution logging.',
+      'AI agent integrated via the internal Agentic Platform. Claude 4.5 Sonnet for reasoning, GPT-4o-mini for suggestions. 36 tools with input validation, 21 BigQuery tables, and full execution logging with timing spans.',
     tech: ['Claude AI', 'Agentic Platform', 'Python'],
     link: `${import.meta.env.BASE_URL}case-studies/ci-analysis-agent/`,
   },
   {
     title: 'GCP Infrastructure',
-    metric: '16+ Services',
+    metric: '16+ Cloud Run Services',
     description:
-      'Terraform-managed GCP infrastructure for 16+ Cloud Run services with unified service accounts, Cloud Scheduler automation, and BigQuery datasets across 7 governance domains. Jenkins → Artifact Registry → Cloud Run pipeline across dev/stg/prd.',
+      'Terraform-managed GCP: 16+ Cloud Run services, shared service accounts, Cloud Scheduler, and BigQuery datasets across 7 domains. CI/CD runs Jenkins to Artifact Registry to Cloud Run across dev/stg/prd.',
     tech: ['Terraform', 'Cloud Run', 'BigQuery'],
     link: `${import.meta.env.BASE_URL}case-studies/gcp-infrastructure/`,
   },
   {
     title: 'OpsieBot',
-    metric: 'AI Automation',
+    metric: 'Slack → Terraform PRs',
     description:
-      'Slack bot automating PagerDuty team governance using Claude AI for natural language parsing. Generates GitHub PRs with atomic Terraform changes across team resources, schedules, and escalation policies with duplicate validation.',
+      'Slack bot that uses Claude AI to parse PagerDuty team rename requests and generate GitHub PRs with Terraform changes across team resources, schedules, and escalation policies. Includes duplicate detection.',
     tech: ['Claude AI', 'Slack', 'Terraform'],
     link: `${import.meta.env.BASE_URL}case-studies/opsiebot/`,
   },
@@ -52,7 +52,7 @@ const latestPosts = allPosts
 
 <BaseLayout
   title="Tech Manager | AI Systems & Cloud Automation"
-  description="Tech Manager building scalable systems, automating workflows, and improving engineering visibility. GCP, BigQuery, DevOps, and data-powered decisioning."
+  description="Tech Manager building internal platforms with AI, GCP, BigQuery, and Terraform. Connecting infrastructure data so engineering teams can see cause and effect."
 >
   <!-- Hero Section - Lead with Impact -->
   <section class="hero">
@@ -65,12 +65,10 @@ const latestPosts = allPosts
       AI Systems · Cloud Automation · Data-Powered Decisioning
     </h1>
     <p class="hero-subtitle">
-      I build <strong>operational intelligence platforms</strong>, automate
-      workflows, and improve engineering visibility through software.
-      Architecting IE Hub — bridging <strong>data infrastructure</strong>,
-      <strong>AI-powered investigation</strong>, and <strong
-        >team performance</strong
-      > — driving operational clarity across Infrastructure Engineering.
+      I build internal systems that connect infrastructure data across tools so
+      teams can see cause and effect. Currently building IE Hub at ZoomInfo: one
+      platform linking incidents, costs, monitors, and releases across DataDog,
+      PagerDuty, Jira, and more.
     </p>
 
     <!-- Social Proof - Companies -->
@@ -155,8 +153,10 @@ const latestPosts = allPosts
       {
         keyProjects.map((project) => (
           <a href={project.link} class="key-project-card">
-            <div class="project-metric">{project.metric}</div>
-            <h3>{project.title}</h3>
+            <h3>
+              {project.title}{' '}
+              <span class="project-metric">{project.metric}</span>
+            </h3>
             <p>{project.description}</p>
             <div class="project-tech">
               {project.tech.map((t) => (
@@ -213,7 +213,7 @@ const latestPosts = allPosts
   <!-- Contact CTA -->
   <ContactCTA
     heading="Let's talk"
-    text="I build scalable systems and automate workflows that drive operational clarity. Let's connect."
+    text="I build internal tools that connect infrastructure data so teams can see cause and effect. Let's connect."
   />
 </BaseLayout>
 
@@ -763,11 +763,17 @@ const latestPosts = allPosts
   }
 
   .project-metric {
-    font-size: var(--font-size-stat);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-accent);
-    margin-bottom: var(--spacing-sm);
-    letter-spacing: var(--letter-spacing-tight);
+    display: inline-block;
+    font-size: var(--font-size-2xs);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-muted);
+    background: var(--color-overlay-black-30);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    padding: 0.15rem var(--spacing-sm);
+    margin-left: var(--spacing-xs);
+    letter-spacing: var(--letter-spacing-subtle);
+    vertical-align: middle;
   }
 
   .key-project-card h3 {

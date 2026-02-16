@@ -1,6 +1,6 @@
 ---
 title: 'Quantifying Incident Costs: From Engineer Time to Financial Impact'
-description: 'How I built a financial impact pipeline that calculates per-incident costs from responder time, war room meetings, and salary data — turning incident prevention into a business case.'
+description: 'How I built a financial impact pipeline that calculates per-incident costs from responder time, war room meetings, and salary data. Turning incident prevention into a business case.'
 pubDate: 2025-11-05
 tags: ['data-engineering', 'bigquery', 'operations', 'cost']
 draft: false
@@ -12,7 +12,7 @@ project: 'ie-hub-platform'
 
 ## Why Financial Impact Matters
 
-Engineering teams talk about incidents in operational terms — severity, TTR, blast radius. Leadership thinks in financial terms — cost, ROI, investment prioritization.
+Engineering teams talk about incidents in operational terms: severity, TTR, blast radius. Leadership thinks in financial terms: cost, ROI, investment prioritization.
 
 Without financial data, the conversation is:
 
@@ -32,11 +32,11 @@ That's a conversation leadership can act on.
 
 Per-incident cost is calculated from three components:
 
-**Responder Time** — Engineer hours from PagerDuty acknowledgment to resolution. Source: PagerDuty incident timeline. Each responder's time is valued at their salary band's hourly rate.
+**Responder Time:** Engineer hours from PagerDuty acknowledgment to resolution. Source: PagerDuty incident timeline. Each responder's time is valued at their salary band's hourly rate.
 
-**War Room Cost** — Meeting participant count × duration. Source: Slack war room creation events + Zoom meeting participant lists. Each participant's time is valued at their salary band's hourly rate.
+**War Room Cost:** Meeting participant count × duration. Source: Slack war room creation events + Zoom meeting participant lists. Each participant's time is valued at their salary band's hourly rate.
 
-**Opportunity Cost** — Engineering time diverted from planned work. Calculated as a multiplier on direct responder time (currently 1.5x) to account for context switching, interrupted sprints, and downstream delays.
+**Opportunity Cost:** Engineering time diverted from planned work. Calculated as a multiplier on direct responder time (currently 1.5x) to account for context switching, interrupted sprints, and downstream delays.
 
 ```
 incident_cost = responder_cost + war_room_cost + opportunity_cost
@@ -64,11 +64,11 @@ OrgResolver maps each incident responder and war room participant to their salar
 
 The pipeline produces cost data at multiple aggregation levels:
 
-- **Per-incident** — "CI-3285 cost $47,000"
-- **Per-team per quarter** — "Team Alpha's incidents cost $180K in Q3"
-- **Per-service** — "Service X has the highest incident cost"
-- **Per-severity** — "Critical incidents average $35K; High incidents average $12K"
-- **Trend** — "Incident costs decreased 15% quarter-over-quarter"
+- **Per-incident:** "CI-3285 cost $47,000"
+- **Per-team per quarter:** "Team Alpha's incidents cost $180K in Q3"
+- **Per-service:** "Service X has the highest incident cost"
+- **Per-severity:** "Critical incidents average $35K; High incidents average $12K"
+- **Trend:** "Incident costs decreased 15% quarter-over-quarter"
 
 These aggregations power the Incident Cost Analytics page in IE Hub and are queryable via the AI agent.
 

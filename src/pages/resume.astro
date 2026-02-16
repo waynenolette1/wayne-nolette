@@ -11,15 +11,15 @@ const experience = [
     location: 'Waltham, MA',
     period: 'January 2025 - Present',
     highlights: [
-      'Architected IE Hub — a unified operational intelligence platform for Infrastructure Engineering, consolidating DataDog, PagerDuty, Jira, Slack, Zoom, and Backstage data into a single team-scoped system for service health visibility, change management compliance, incident cost analysis, and monitor governance',
-      'Integrated enterprise-grade AI investigation agent into IE Hub via the internal Agentic Platform — powered by Claude 4.5 Sonnet for reasoning and GPT-4o-mini for suggestion generation, with 36 governed production tools, 21 BigQuery tables, structured tool invocation with input sanitization and guardrails, and execution logging with timing spans',
-      'Engineered OrgResolver identity system enabling natural language queries ("show my team\'s CIs") with automatic user-to-team-to-service resolution via BigQuery, supporting full leadership chain traversal (director → VP → SVP) for team-scoped operational intelligence',
-      'Built 15-page React 19 + TypeScript frontend (XCL Tools ZI) with Team Hub dashboard, Executive Briefing, maturity model tracking, incident cost analytics, CMG/CMv2 violation monitoring, DataDog monitor governance for 9,000+ monitors, PagerDuty schedule health, and Okta SSO authentication',
-      'Architected Terraform-managed GCP infrastructure for 16+ Cloud Run services with unified service accounts, Cloud Scheduler automation, and BigQuery datasets across 7 governance domains — deployed via Jenkins → Artifact Registry → Cloud Run pipeline across dev/stg/prd environments',
-      'Designed predictive release risk scoring engine (0-100) correlating deployment speed, change management violations, and historical incident data to flag high-risk deployments before production impact',
-      'Built financial impact analysis pipeline calculating per-incident costs from engineer time, war room meetings, and salary reference data — enabling ROI-driven investment in incident prevention across engineering teams',
-      'Created OpsieBot — a Slack bot using Claude AI for natural language parsing to automate PagerDuty team renames, generating GitHub PRs with comprehensive Terraform changes and duplicate validation safeguards',
-      'Recognized as personal MVP by teammates — nominated for transforming operational challenges into automated solutions that drive clarity across dozens of engineering groups',
+      'Built IE Hub to correlate incidents, releases, costs, and monitor health across DataDog, PagerDuty, Jira, Slack, Zoom, and Backstage in one team-scoped dashboard. Replaced six disconnected tools with a single system Infrastructure Engineering uses daily for service health, change compliance, and cost analysis',
+      'Integrated an AI investigation agent into IE Hub via the internal Agentic Platform. Claude 4.5 Sonnet handles reasoning, GPT-4o-mini generates suggestions. 36 tools, each with input validation and parameterized BigQuery queries across 21 tables. Every invocation logged with timing spans for auditability',
+      'Built OrgResolver so users can query by name ("show my team\'s CIs") instead of service IDs. Resolves users to teams to services via BigQuery, traversing the full leadership chain (director through SVP) to scope any dashboard or report automatically',
+      'Built a 15-page React 19 + TypeScript frontend covering Team Hub, Executive Briefing, maturity tracking, incident cost breakdowns, change management violation monitoring, DataDog monitor coverage for 9,000+ monitors, PagerDuty schedule health, and Okta SSO',
+      'Managed GCP infrastructure in Terraform: 16+ Cloud Run services, shared service accounts, Cloud Scheduler jobs, and BigQuery datasets across 7 domains. CI/CD runs Jenkins to Artifact Registry to Cloud Run across dev/stg/prd',
+      'Designed a release risk score (0-100) that correlates deployment velocity, change management violations, and past incident frequency to flag risky deployments before they hit production',
+      'Built a per-incident cost pipeline: engineer hours, war room duration, and salary data feed a cost model that gives leadership actual dollar figures for incident prevention ROI',
+      "Created OpsieBot, a Slack bot that uses Claude AI to parse team rename requests and generate GitHub PRs with Terraform changes across team resources, schedules, and escalation policies. Includes duplicate detection so renames don't collide",
+      'Recognized as personal MVP by teammates for shipping tooling that replaced manual reporting across dozens of engineering groups',
     ],
   },
   {
@@ -105,7 +105,7 @@ const skills = {
 
 <BaseLayout
   title="Resume"
-  description="Tech Manager specializing in AI systems, cloud automation, GCP, BigQuery, DevOps, and data-powered decisioning."
+  description="Tech Manager building internal platforms with AI, GCP, BigQuery, and Terraform. Previously process and quality engineering at BAE Systems."
 >
   <div class="page-header resume-hero">
     <div class="availability-badge">
@@ -216,15 +216,15 @@ const skills = {
 
   <section class="summary">
     <p class="summary-lead">
-      36 AI tools. 16+ cloud services. One unified operational intelligence
-      platform.
+      I built IE Hub: one system connecting incidents, costs, monitors, and
+      releases across six tools so Infrastructure Engineering can see cause and
+      effect.
     </p>
     <p class="summary-detail">
-      From manufacturing floors to cloud infrastructure. Technical Operations
-      Manager architecting IE Hub — an operational intelligence platform
-      embedding production-grade AI via the Agentic Platform. Automating
-      engineering workflows at scale and driving operational clarity across
-      Infrastructure Engineering.
+      Started in manufacturing (BAE Systems, quality and process engineering),
+      now building internal platforms at ZoomInfo. The thread is the same:
+      connect data across systems, automate the tedious parts, and surface what
+      matters to the people making decisions.
     </p>
   </section>
 
@@ -313,7 +313,7 @@ const skills = {
 
   <ContactCTA
     heading="Interested in working together?"
-    text="I build scalable systems and automate workflows that drive operational clarity. Let's talk."
+    text="I build internal tools that connect infrastructure data so teams can see cause and effect. Let's talk."
   />
 </BaseLayout>
 

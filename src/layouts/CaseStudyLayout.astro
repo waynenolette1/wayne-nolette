@@ -83,15 +83,15 @@ const footerLinks = [
 >
   <!-- TL;DR Summary Box -->
   <Fragment slot="header-extra">
-    {/* Key Metrics Callout - most prominent element */}
+    {/* Key Metrics - inline badges */}
     {
       metrics && (metrics.primary || metrics.secondary) && (
-        <div class="metrics-hero">
+        <div class="metrics-badges">
           {metrics.primary && (
-            <span class="metric-primary">{metrics.primary}</span>
+            <span class="metric-badge">{metrics.primary}</span>
           )}
           {metrics.secondary && (
-            <span class="metric-secondary">{metrics.secondary}</span>
+            <span class="metric-badge">{metrics.secondary}</span>
           )}
         </div>
       )
@@ -234,59 +234,23 @@ const footerLinks = [
 </ArticleLayout>
 
 <style>
-  /* ===== Metrics Hero ===== */
-  .metrics-hero {
+  /* ===== Metrics Badges ===== */
+  .metrics-badges {
     display: flex;
-    align-items: baseline;
-    gap: var(--spacing-lg);
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
     margin-bottom: var(--spacing-lg);
-    padding: var(--spacing-xl) var(--spacing-lg);
-    background: linear-gradient(
-      135deg,
-      var(--color-accent-08) 0%,
-      var(--color-gradient-purple-08) 100%
-    );
-    border: 1px solid var(--color-accent-20);
-    border-radius: var(--radius-lg);
   }
 
-  .metric-primary {
-    font-size: var(--font-size-9xl);
-    font-weight: var(--font-weight-extrabold);
-    background: linear-gradient(
-      135deg,
-      var(--color-accent) 0%,
-      var(--color-gradient-purple) 100%
-    );
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    line-height: var(--line-height-tight);
-    letter-spacing: var(--letter-spacing-tighter);
-  }
-
-  .metric-secondary {
-    font-size: var(--font-size-3xl);
-    font-weight: var(--font-weight-bold);
+  .metric-badge {
+    display: inline-block;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
     color: var(--color-text-muted);
-    letter-spacing: var(--letter-spacing-snug);
-    display: flex;
-    align-items: center;
-  }
-
-  @media (max-width: 640px) {
-    .metrics-hero {
-      flex-direction: column;
-      gap: var(--spacing-sm);
-      padding: var(--spacing-lg) var(--spacing-md);
-    }
-
-    .metric-primary {
-      font-size: var(--font-size-stat);
-    }
-
-    .metric-secondary {
-      font-size: var(--font-size-xl);
-    }
+    background: var(--color-overlay-black-30);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    padding: var(--spacing-xs) var(--spacing-md);
+    letter-spacing: var(--letter-spacing-subtle);
   }
 </style>

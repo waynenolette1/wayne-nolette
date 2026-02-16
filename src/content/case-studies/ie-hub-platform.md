@@ -1,10 +1,10 @@
 ---
-title: 'IE Hub: Operational Intelligence Platform'
-description: 'Unified governance platform for Infrastructure Engineering — consolidating DataDog, PagerDuty, Jira, Slack, Zoom, and Backstage into a single team-scoped system with AI-powered investigation, cost analysis, and monitor governance for 9,000+ monitors.'
+title: 'IE Hub: Cross-System Operations Platform'
+description: 'Internal platform connecting DataDog, PagerDuty, Jira, Slack, Zoom, and Backstage into one team-scoped dashboard for Infrastructure Engineering. 15-page React frontend, AI investigation agent with 36 validated tools, and monitor tracking for 9,000+ monitors.'
 order: 1
 role: 'Technical Operations Manager II'
 duration: '12+ months'
-outcome: 'Single operational view across 6+ data sources, 15-page platform, 9,000+ monitors governed'
+outcome: 'Single operational view across 6+ data sources, 15-page platform, 9,000+ monitors tracked'
 tech:
   [
     'React 19',
@@ -25,23 +25,23 @@ skills:
     'reliability',
   ]
 metrics:
-  primary: '15 Pages'
-  secondary: '9,000+ Monitors'
-ownership: 'Architected the entire platform from concept to production — designed the data model, built the React frontend, implemented the BFF layer, and led integration of the Agentic Platform AI agent. Sole technical owner across all components.'
+  primary: '6 Systems Integrated'
+  secondary: '21 BigQuery Tables'
+ownership: 'Designed the data model, built the React frontend, implemented the BFF layer, and led integration of the Agentic Platform AI agent. Sole technical owner across all components.'
 ---
 
 ## Context
 
-Infrastructure Engineering at ZoomInfo had a visibility problem. Operational data lived in silos — DataDog for monitoring, PagerDuty for incidents, Jira for change management, Slack and Zoom for communications, Backstage for service ownership. Teams couldn't answer basic questions without manually cross-referencing multiple tools:
+Infrastructure Engineering at ZoomInfo had a visibility problem. Operational data lived in silos: DataDog for monitoring, PagerDuty for incidents, Jira for change management, Slack and Zoom for communications, Backstage for service ownership. Teams couldn't answer basic questions without manually cross-referencing multiple tools:
 
 - "How many critical incidents has my team had this quarter?"
-- "Are our monitors healthy or is there governance drift?"
+- "Are our monitors healthy or is there drift?"
 - "What's the cost impact of our incidents?"
 - "Did our releases follow change management process?"
 
-Reporting was manual. Ownership was unclear. Governance was reactive. There was no single system that connected service health to team performance to financial impact.
+Reporting was manual. Ownership was unclear. Compliance was reactive. No single system connected service health to team performance to financial impact.
 
-I proposed and built IE Hub — a unified operational intelligence platform that functions as the Infrastructure Engineering operating system.
+I proposed and built IE Hub to consolidate all six data sources into one team-scoped platform for Infrastructure Engineering.
 
 ## Technical Architecture
 
@@ -66,7 +66,7 @@ Architecture Stack:
 └─────────────────────────────────────────────┘
                     ↓
 ┌─────────────────────────────────────────────┐
-│  Governance Services (Cloud Run)            │
+│  Backend Services (Cloud Run)               │
 │    16+ microservices, Cloud Scheduler       │
 └─────────────────────────────────────────────┘
                     ↓
@@ -83,58 +83,48 @@ Architecture Stack:
 
 ### Frontend Platform (XCL Tools ZI)
 
-The frontend is a 15-page React 19 + TypeScript application built with Tailwind CSS. Pages include:
+The frontend is a 15-page React 19 + TypeScript application built with Tailwind CSS:
 
-- **Team Hub Dashboard** — central landing page with team-scoped operational summary
-- **Executive Briefing** — leadership-ready overview of organizational health
-- **Maturity Model Tracking** — team operational maturity scoring and trends
-- **Incident Cost Analytics** — financial impact per incident, per team, per quarter
-- **CMG / CMv2 Violation Monitoring** — change management compliance tracking
-- **DataDog Monitor Governance** — health, ownership, and governance for 9,000+ monitors
-- **PagerDuty Schedule Health** — on-call coverage, reliability, and rotation gaps
-- **Governance Policy Tracking** — cross-cutting policy compliance views
-- **Cost Intelligence** — infrastructure and incident cost breakdowns
-- **AI Investigation Agent** — embedded CI Analysis Agent via Agentic Platform
-- **Service Deep-Dive Profiles** — per-service health, incidents, and ownership
+- **Team Hub Dashboard:** central landing page with team-scoped operational summary
+- **Executive Briefing:** leadership-ready overview of organizational health
+- **Maturity Model Tracking:** team operational maturity scoring and trends
+- **Incident Cost Analytics:** financial impact per incident, per team, per quarter
+- **CMG / CMv2 Violation Monitoring:** change management compliance tracking
+- **DataDog Monitor Tracking:** health, ownership, and coverage for 9,000+ monitors
+- **PagerDuty Schedule Health:** on-call coverage, reliability, and rotation gaps
+- **Policy Tracking:** cross-cutting compliance views
+- **Cost Intelligence:** infrastructure and incident cost breakdowns
+- **AI Investigation Agent:** embedded CI Analysis Agent via Agentic Platform
+- **Service Deep-Dive Profiles:** per-service health, incidents, and ownership
 
 Key technical features:
 
-- **Okta SSO** with admin impersonation for support scenarios
-- **Server-side pagination** for large datasets
-- **CSV exports** for all tabular views
-- **Structured error handling** with user-friendly error states
-- **E2E + unit testing** for critical workflows
+- Okta SSO with admin impersonation for support scenarios
+- Server-side pagination for large datasets
+- CSV exports for all tabular views
+- Structured error handling with user-friendly error states
+- E2E + unit testing for critical workflows
 
 ### Backend (BFF + BigQuery)
 
-The Backend-for-Frontend (BFF) layer serves as the data orchestration layer between the UI and BigQuery. It:
+The BFF layer is a Node.js service that sits between the UI and BigQuery. The frontend never queries BigQuery directly. Instead, the BFF aggregates data from 21+ tables across 6 datasets, enriches cross-system relationships (linking a PagerDuty incident to a Jira release to a DataDog monitor), and applies team scoping via OrgResolver. It also handles retry logic and exposes versioned API endpoints.
 
-- Aggregates data from 21+ BigQuery tables across 6 datasets
-- Enriches cross-system relationships (e.g., linking a PagerDuty incident to a Jira release to a DataDog monitor)
-- Applies team scoping and organizational mapping via OrgResolver
-- Implements retry logic and resilience patterns
-- Exposes versioned API endpoints
+This is the canonical pattern for IE Hub: **the BFF owns cross-system joins, the UI owns presentation.** Keeping cross-system aggregation out of the frontend meant the React app stayed maintainable even as we added data sources.
 
 The 6 BigQuery datasets cover:
 
-1. **PagerDuty** — incidents, services, teams, schedules, escalation policies
-2. **Jira** — releases, change management records, violations
-3. **DataDog** — monitors, downtimes, SLO data
-4. **Slack** — channel activity, war room participation
-5. **Zoom** — incident call tracking
-6. **Incident Cost** — financial impact modeling, salary references, cost calculations
+1. **PagerDuty:** incidents, services, teams, schedules, escalation policies
+2. **Jira:** releases, change management records, violations
+3. **DataDog:** monitors, downtimes, SLO data
+4. **Slack:** channel activity, war room participation
+5. **Zoom:** incident call tracking
+6. **Incident Cost:** financial impact modeling, salary references, cost calculations
 
 ### AI Layer (Agentic Platform Integration)
 
-IE Hub embeds a production-grade AI investigation agent via the internal Agentic Platform. This is not a chatbot — it's a governed operational intelligence engine.
+IE Hub embeds an AI investigation agent via the internal Agentic Platform. It runs parameterized queries against production data through validated tool invocations. The agent can only call predefined tools. Each tool validates inputs, constructs a parameterized BigQuery query, and logs the execution with timing spans.
 
-The agent uses:
-
-- **Claude 4.5 Sonnet** for reasoning and tool orchestration
-- **GPT-4o-mini** for suggestion generation
-- **36 governed production tools** with structured invocation
-- **Input sanitization and guardrails** at every tool boundary
-- **Execution logging with timing spans** for observability
+The agent uses Claude 4.5 Sonnet for reasoning and tool orchestration, and GPT-4o-mini for suggestion generation. There are 36 tools total, each with input validation and sanitization at the tool boundary. Execution is logged with timing spans for observability.
 
 Users can ask natural language questions like:
 
@@ -148,42 +138,29 @@ The agent resolves identity via OrgResolver, determines tool strategy, executes 
 
 ### OrgResolver (Identity Resolution)
 
-OrgResolver enables natural language team-scoped queries. When a user says "show my team's CIs," the system:
+**OrgResolver** is the identity resolution system that makes team-scoped queries work. This is the canonical definition: when a user says "show my team's CIs," OrgResolver identifies them from their Okta session, resolves their team membership via `rdemp_records` in BigQuery, maps team to services to incidents to costs, and supports full leadership chain traversal (director → VP → SVP).
 
-1. Identifies the user from their Okta session
-2. Resolves their team membership via `rdemp_records` in BigQuery
-3. Maps team → services → incidents → costs
-4. Supports full leadership chain traversal (director → VP → SVP)
-
-This enables every view in IE Hub to be automatically scoped to the user's organizational context.
+Every view in IE Hub inherits this scoping automatically. A dashboard, a report, an AI query: they all resolve through the same identity layer. This was the highest-leverage decision in the architecture. Without it, every feature would need its own team-filtering logic.
 
 ## Key Decisions
 
-### Unified Platform Over Point Solutions
+### Single Platform Over Point Solutions
 
-The alternative was building separate dashboards for each data source. I argued for a unified platform because:
-
-- **Cross-system correlation** is where the real insight lives — knowing that a release violated change management AND caused an incident AND cost $X is only possible when data is joined
-- **Team scoping** needs to be consistent — every view should respect the same organizational hierarchy
-- **Maintenance cost** scales linearly with the number of separate tools but stays constant with a unified platform
+The alternative was building separate dashboards for each data source. I argued for one platform because cross-system correlation is where the real insight lives. Knowing that a release violated change management AND caused an incident AND cost $X is only possible when data is joined. Team scoping needs to be consistent across every view. Maintenance cost scales linearly with separate tools but stays roughly constant with one platform.
 
 ### BigQuery as Operational Data Warehouse
 
-BigQuery was chosen over alternatives because:
-
-- Already in use for data infrastructure at ZoomInfo
-- Handles the scale of 21+ tables with complex joins efficiently
-- Enables the AI agent to query production data directly with governed access
-- Cost-effective for analytical query patterns (column-oriented, pay-per-query)
+BigQuery was chosen because it was already in use for data infrastructure at ZoomInfo, handles 21+ tables with complex joins efficiently, enables the AI agent to query production data with controlled access, and is cost-effective for analytical query patterns (column-oriented, pay-per-query).
 
 ### Embedding AI via Agentic Platform
 
-Rather than building a standalone AI tool, I integrated the AI investigation agent directly into IE Hub via the internal Agentic Platform. This was a deliberate architectural decision:
+Rather than building a standalone AI tool, I integrated the agent directly into IE Hub via the internal Agentic Platform. It runs on internal infrastructure with logging and access controls. The agent inherits the user's team scope via OrgResolver. Users encounter it within their operational workflow, not as a separate tool. Execution is logged, tools are validated, queries are parameterized.
 
-- **Not experimental** — it runs on enterprise infrastructure with governance
-- **Context-aware** — the agent inherits the user's team scope and permissions
-- **Discoverable** — users encounter it naturally within their operational workflow
-- **Accountable** — execution is logged, tools are governed, queries are sanitized
+## What Was Harder Than Expected
+
+Cross-system data quality was the biggest ongoing challenge. Service names differ between PagerDuty, DataDog, and Jira. Team names change after reorgs. User emails don't always match across systems. We spent weeks building and maintaining the `service_mappings` table to reconcile naming conventions, and it still requires periodic manual review when new services are onboarded.
+
+The other surprise was adoption patterns. Some pages saw immediate daily use (Team Hub, Incident Cost Analytics), while others we thought would be popular needed significant iteration before anyone used them regularly. Building all 15 pages before validating with users was a mistake. A phased rollout with feedback loops after the first 5-6 pages would have been more efficient.
 
 ## Results
 
@@ -191,7 +168,7 @@ Rather than building a standalone AI tool, I integrated the AI investigation age
 | ---------------------------- | ---------------------- | ---------------------------------------- |
 | Operational view             | Siloed across 6+ tools | Single team-scoped platform              |
 | Incident cost visibility     | None                   | Per-incident, per-team, per-quarter      |
-| Monitor governance           | Manual spot-checks     | 9,000+ monitors governed                 |
+| Monitor tracking             | Manual spot-checks     | 9,000+ monitors tracked                  |
 | Change management compliance | Reactive audits        | Real-time violation tracking             |
 | AI investigation             | None                   | Natural language queries across all data |
 | Reporting                    | Manual spreadsheets    | Automated dashboards + CSV export        |
@@ -199,25 +176,25 @@ Rather than building a standalone AI tool, I integrated the AI investigation age
 
 ### Business Impact
 
-- **Faster incident analysis** — cross-system correlation available in seconds
-- **Reduced governance drift** — automated compliance monitoring catches violations early
-- **Clear team accountability** — OrgResolver maps every metric to a team and leader
-- **Financial transparency** — incident costs are tracked and attributable
-- **Leadership-level insight** — Executive Briefing page replaces manual reporting
-- **Improved release safety** — deployment risk scoring flags issues before production
+- Cross-system incident analysis available in seconds instead of 30-60 minutes of manual cross-referencing
+- Automated compliance monitoring catches violations early instead of finding them in quarterly audits
+- OrgResolver maps every metric to a team and leader, so accountability is automatic
+- Incident costs are tracked and attributable, giving leadership real numbers for investment decisions
+- Executive Briefing page replaces manual reporting that previously took hours
+- Deployment risk scoring flags issues before production instead of after
 
 ## Lessons
 
 ### Would Repeat
 
-**Building the BFF layer as a data orchestration service.** Keeping the frontend thin and pushing cross-system aggregation to the BFF layer kept the React app maintainable. The BFF handles the complexity of joining 6 data sources while the UI focuses on presentation.
+**BFF as the data orchestration layer.** Keeping the frontend thin and pushing cross-system aggregation to the BFF kept the React app maintainable. The BFF handles the complexity of joining 6 data sources while the UI focuses on presentation.
 
-**OrgResolver as a foundational primitive.** Making identity resolution a first-class system component — not an afterthought — meant every feature we added automatically inherited team scoping. This was the highest-leverage decision in the architecture.
+**OrgResolver as a foundational primitive.** Making identity resolution a first-class system component meant every feature automatically inherited team scoping. Every new page, every new data source, every AI query just works with the user's organizational context.
 
-**Integrating AI directly into the workflow.** Embedding the agent in IE Hub rather than building a standalone tool meant engineers discovered it naturally while doing their daily work. Adoption was organic rather than forced.
+**Integrating AI directly into the workflow.** Embedding the agent in IE Hub rather than building a standalone tool meant engineers discovered it while doing their daily work. Adoption was organic rather than forced.
 
 ### Would Avoid
 
-**Underestimating the data quality challenge.** Cross-system data correlation requires clean, consistent identifiers. We spent significant time normalizing team names, service identifiers, and user emails across PagerDuty, Jira, and DataDog. Starting with a formal data quality audit would have saved weeks.
+**Starting with a formal data quality audit.** I should have mapped identifier inconsistencies across all six systems before building the correlation layer. The time spent normalizing team names, service identifiers, and user emails after the fact was significant and preventable.
 
-**Building all 15 pages before validating with users.** Some pages saw immediate heavy adoption (Team Hub, Incident Cost Analytics), while others needed significant iteration. A phased rollout with user feedback loops would have been more efficient.
+**Building all pages before user validation.** The pages that got the most use were obvious in retrospect. Starting with core pages and adding based on actual demand would have saved effort on pages that needed heavy iteration.

@@ -1,1 +1,2 @@
+export PATH="/Users/waynenolettegmail.com/local/node-v22.14.0-darwin-arm64/bin:$PATH"
 npx lint-staged

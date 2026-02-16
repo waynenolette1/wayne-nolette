@@ -1,6 +1,6 @@
 ---
-title: 'Integrating AI Agents via an Enterprise Agentic Platform'
-description: 'How we embedded a production-grade AI investigation agent into IE Hub — governed tools, dual LLM strategy, and why this is not a chatbot.'
+title: 'Integrating AI Agents via an Internal Agentic Platform'
+description: 'How I embedded a 36-tool AI investigation agent into IE Hub. Validated tools, dual LLM strategy, and why this is not a chatbot.'
 pubDate: 2025-11-20
 tags: ['ai', 'llm', 'architecture', 'platform']
 draft: false
@@ -9,13 +9,13 @@ featured: true
 project: 'ci-analysis-agent'
 ---
 
-**TL;DR**: I integrated a 36-tool AI investigation agent into IE Hub via our internal Agentic Platform. Claude 4.5 Sonnet for reasoning, GPT-4o-mini for suggestions, governed tool execution, and OrgResolver for identity resolution. The key distinction: this is not a chatbot bolted onto a dashboard. It's a governed operational intelligence engine embedded directly into daily workflows.
+**TL;DR**: I integrated a 36-tool AI investigation agent into IE Hub via our internal Agentic Platform. Claude 4.5 Sonnet for reasoning, GPT-4o-mini for suggestions, validated tool execution, and OrgResolver for identity resolution. This is not a chatbot bolted onto a dashboard. It's an investigation engine with structured tool access, embedded directly into the workflow engineers already use.
 
 ## Why Embedding Matters
 
 We could have built the AI agent as a standalone tool. A separate URL, separate auth, separate context. Engineers would have to context-switch from their operational dashboard to the AI tool, re-explain their team context, and paste in incident IDs.
 
-Instead, I embedded the agent directly into IE Hub at `/agent`. When an engineer is looking at their Team Hub and wants to investigate an incident, they click one tab. The agent already knows who they are, which team they're on, and which services they own — because it inherits the same OrgResolver identity that powers every other page.
+Instead, I embedded the agent directly into IE Hub at `/agent`. When an engineer is looking at their Team Hub and wants to investigate an incident, they click one tab. The agent already knows who they are, which team they're on, and which services they own, because it inherits the same OrgResolver identity that powers every other page.
 
 That's the difference between:
 
@@ -42,14 +42,14 @@ Running every interaction through Claude 4.5 Sonnet would be expensive and unnec
 
 This keeps per-query costs reasonable while maintaining high-quality reasoning for the hard parts.
 
-## Governed Tools, Not Freeform SQL
+## Validated Tools, Not Freeform SQL
 
 The agent has 36 tools. Each tool is a structured function with:
 
-- **Typed input schema** — parameters validated before execution
-- **Parameterized BigQuery queries** — no SQL injection risk
-- **Timeout bounds** — queries that exceed limits are killed
-- **Execution logging** — every tool invocation is logged with timing spans
+- **Typed input schema:** parameters validated before execution
+- **Parameterized BigQuery queries:** no SQL injection risk
+- **Timeout bounds:** queries that exceed limits are killed
+- **Execution logging:** every tool invocation is logged with timing spans
 
 I considered letting the LLM generate arbitrary SQL. Rejected it immediately:
 
@@ -57,9 +57,9 @@ I considered letting the LLM generate arbitrary SQL. Rejected it immediately:
 
 2. **Reliability.** LLM-generated SQL is probabilistic. Sometimes it works, sometimes it hallucinates a column name. Structured tools work every time.
 
-3. **Performance.** I hand-optimized each query for the specific access patterns. The incident search tool uses partition pruning on date columns. The monitor governance tool uses materialized aggregations. An LLM wouldn't know to do this.
+3. **Performance.** I hand-optimized each query for the specific access patterns. The incident search tool uses partition pruning on date columns. The monitor tracking tool uses materialized aggregations. An LLM wouldn't know to do this.
 
-The tradeoff: less flexible. The agent can only do what the 36 tools allow. But in practice, those 36 tools cover the questions engineers actually ask. And when a new question pattern emerges, I add a tool — takes a few hours, not a redesign.
+The tradeoff: less flexible. The agent can only do what the 36 tools allow. But in practice, those 36 tools cover the questions engineers actually ask. When a new question pattern emerges, I add a tool. Takes a few hours, not a redesign.
 
 ## ReactAgent Pattern
 
@@ -80,8 +80,8 @@ The chaining is critical. Single-turn would return "I found CI-3285" and stop. R
 
 ## What I Learned
 
-**OrgResolver is the highest-leverage component.** Without identity resolution, every query requires the user to specify exact team names, service IDs, and time ranges. With it, "show my team's CIs" just works. Build identity resolution first, everything else becomes easier.
+**OrgResolver is the highest-leverage component.** Without identity resolution, every query requires the user to specify exact team names, service IDs, and time ranges. With it, "show my team's CIs" just works. Build identity resolution first; everything else becomes easier.
 
-**36 tools is probably too many at launch.** 10 tools see daily use. 15 see weekly use. 11 are rarely invoked. Starting with 15 core tools and adding based on actual usage would have been more efficient. But having comprehensive coverage meant early users could always get an answer, which drove adoption.
+**36 tools is probably too many at launch.** 10 tools see daily use. 15 see weekly use. 11 are rarely invoked. Starting with 15 core tools and adding based on actual usage would have been more efficient. But having full coverage meant early users could always get an answer, which helped adoption.
 
-**The dual LLM strategy pays for itself.** Suggestion generation via GPT-4o-mini adds meaningful UX value — users discover capabilities they didn't know existed. And the cost is negligible compared to Claude reasoning.
+**The dual LLM strategy pays for itself.** Suggestion generation via GPT-4o-mini improves the experience noticeably. Users discover capabilities they didn't know existed, and the cost is negligible compared to Claude reasoning.

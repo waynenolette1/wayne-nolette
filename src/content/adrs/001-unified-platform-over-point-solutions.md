@@ -9,14 +9,14 @@ tags: ['architecture', 'platform', 'governance']
 
 ## Status
 
-**Accepted** — February 2025
+**Accepted:** February 2025
 
 ## Context
 
 Infrastructure Engineering needed operational visibility across DataDog, PagerDuty, Jira, Slack, Zoom, and Backstage. Two approaches were considered:
 
-1. **Point solutions** — Build separate dashboards for each data source. PagerDuty dashboard, DataDog dashboard, Jira dashboard.
-2. **Unified platform** — Build a single platform that consolidates all data sources into a team-scoped operational view.
+1. **Point solutions:** Build separate dashboards for each data source. PagerDuty dashboard, DataDog dashboard, Jira dashboard.
+2. **Unified platform:** Build a single platform that consolidates all data sources into a team-scoped operational view.
 
 ## Decision
 
@@ -32,8 +32,8 @@ I chose the unified platform approach (IE Hub).
 
 ## Consequences
 
-- Higher upfront complexity — the BFF layer handles cross-system data joining
-- Centralized data model — BigQuery as the single data warehouse for all sources
+- Higher upfront complexity: the BFF layer handles cross-system data joining
+- Centralized data model: BigQuery as the single data warehouse for all sources
 - Single identity system (OrgResolver) powers all team-scoped views
 - One codebase, one deployment, one monitoring surface
 
@@ -41,4 +41,4 @@ I chose the unified platform approach (IE Hub).
 
 - Longer initial development timeline (15 pages vs. starting with 3-4)
 - BigQuery dependency for all operational data
-- Single point of failure — if IE Hub is down, all operational visibility is affected
+- Single point of failure: if IE Hub is down, all operational visibility is affected

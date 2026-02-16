@@ -1,6 +1,6 @@
 ---
 title: 'Terraform at Scale: Managing 16+ Cloud Run Services'
-description: 'How I structured Terraform modules for 16+ governance microservices across dev/stg/prd — standardized modules, least-privilege IAM, and the Jenkins pipeline that ties it together.'
+description: 'How I structured Terraform modules for 16+ Cloud Run sync services across dev/stg/prd. Standardized modules, least-privilege IAM, and the Jenkins pipeline that ties it together.'
 pubDate: 2025-08-12
 tags: ['terraform', 'gcp', 'infrastructure', 'devops']
 draft: false
@@ -8,11 +8,11 @@ confidenceLevel: high
 project: 'gcp-infrastructure'
 ---
 
-**TL;DR**: IE Hub runs on 16+ Cloud Run services, each with its own service account, Cloud Scheduler job, and BigQuery dataset permissions. Managing this across 3 environments without Terraform would be chaos. I built standardized modules that let me spin up a new governance service in ~20 lines of config. The key: least-privilege IAM at the dataset level, not the project level.
+**TL;DR**: IE Hub runs on 16+ Cloud Run services, each with its own service account, Cloud Scheduler job, and BigQuery dataset permissions. Managing this across 3 environments without Terraform would be chaos. I built standardized modules that let me spin up a new service in ~20 lines of config. The key: least-privilege IAM at the dataset level, not the project level.
 
 ## The Scale Problem
 
-Each governance service needs:
+Each sync service needs:
 
 - A Cloud Run service definition
 - A dedicated service account
@@ -26,15 +26,15 @@ That's 5 resources per service × 16 services × 3 environments = 240 Terraform 
 
 I created 4 reusable modules:
 
-**`cloud_run_service`** — container image, CPU/memory limits, environment variables, health check endpoint, min/max instances.
+**`cloud_run_service`:** container image, CPU/memory limits, environment variables, health check endpoint, min/max instances.
 
-**`service_account`** — creates the account, assigns BigQuery roles scoped to specific datasets, optionally adds Cloud Run invoker permissions for service-to-service calls.
+**`service_account`:** creates the account, assigns BigQuery roles scoped to specific datasets, optionally adds Cloud Run invoker permissions for service-to-service calls.
 
-**`scheduler_job`** — cron expression, HTTP target (Cloud Run URL), OIDC authentication using the service's own service account, retry configuration.
+**`scheduler_job`:** cron expression, HTTP target (Cloud Run URL), OIDC authentication using the service's own service account, retry configuration.
 
-**`bigquery_dataset`** — dataset creation with IAM bindings, table expiration defaults, location constraints.
+**`bigquery_dataset`:** dataset creation with IAM bindings, table expiration defaults, location constraints.
 
-Adding a new governance service:
+Adding a new service:
 
 ```hcl
 module "jira_sync" {
@@ -78,19 +78,19 @@ Instead, every service account gets BigQuery roles scoped to specific datasets:
 - `pd-sync-sa` → `bigquery.dataEditor` on `pd_governance` only
 - `cost-calc-sa` → `bigquery.dataEditor` on `cost_governance`, `bigquery.dataViewer` on `pd_governance` (needs to read incidents for cost calculation)
 
-More Terraform configuration upfront. Dramatically better security posture.
+More Terraform configuration upfront. Significantly better security posture.
 
 ## Environment Strategy
 
 Three environments with intentional differences:
 
-**dev** — reduced scheduler frequency (hourly instead of every 15 minutes), single Cloud Run instance, relaxed resource limits. Saves compute costs during development.
+**dev:** reduced scheduler frequency (hourly instead of every 15 minutes), single Cloud Run instance, relaxed resource limits. Saves compute costs during development.
 
-**stg** — production-like configuration, full scheduler frequency, used for integration testing before promotion.
+**stg:** production-like configuration, full scheduler frequency, used for integration testing before promotion.
 
-**prd** — full configuration, auto-scaling, monitoring alerts.
+**prd:** full configuration, auto-scaling, monitoring alerts.
 
-Environment selection is a single variable — `var.environment` — that propagates through all modules. Scheduler frequencies, instance counts, and resource limits are all environment-aware.
+Environment selection is a single variable (`var.environment`) that propagates through all modules. Scheduler frequencies, instance counts, and resource limits are all environment-aware.
 
 ## The Jenkins Pipeline
 
